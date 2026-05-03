@@ -1,26 +1,303 @@
 @import "tailwindcss";
 
+/* ─── JobNomad · Foundations v0.1 ──────────────────────────────────────────
+   Tokens are written in OKLCh for direct paste into Tailwind v4 / shadcn.
+   Light and dark are designed in parallel — same warmth in both.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+/* ── 01 · PALETTE ─────────────────────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Surfaces & text */
+  --bg:             oklch(0.985 0.006 78);
+  --bg-tint:        oklch(0.970 0.010 76);
+  --surface:        oklch(1 0 0);
+  --surface-tint:   oklch(0.970 0.010 76);
+  --border:         oklch(0.940 0.014 74);
+  --border-strong:  oklch(0.880 0.018 72);
+  --text:           oklch(0.180 0.014 60);
+  --text-soft:      oklch(0.480 0.018 66);
+  --text-muted:     oklch(0.760 0.022 70);
+
+  /* Brand & state */
+  --primary:        oklch(0.470 0.092 201);
+  --primary-soft:   oklch(0.945 0.025 210);
+  --primary-hover:  oklch(0.380 0.078 200);
+  --accent:         oklch(0.660 0.148 52);
+  --accent-soft:    oklch(0.952 0.030 68);
+  --danger:         oklch(0.560 0.168 28);
+  --danger-soft:    oklch(0.940 0.032 26);
+  --success:        oklch(0.510 0.110 154);
+  --ring:           oklch(0.700 0.092 204);
+
+  /* Match score thresholds */
+  --score-low:  oklch(0.560 0.168 28);   /* 0–59   coral */
+  --score-mid:  oklch(0.660 0.148 52);   /* 60–84  sun   */
+  --score-high: oklch(0.470 0.092 201);  /* 85–100 lagoon */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
+/* ── Dark mode ─────────────────────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg:             oklch(0.130 0.010 60);
+    --bg-tint:        oklch(0.150 0.012 62);
+    --surface:        oklch(0.175 0.012 62);
+    --surface-tint:   oklch(0.190 0.014 64);
+    --border:         oklch(0.260 0.016 66);
+    --border-strong:  oklch(0.320 0.018 68);
+    --text:           oklch(0.940 0.008 72);
+    --text-soft:      oklch(0.700 0.016 68);
+    --text-muted:     oklch(0.480 0.018 66);
+
+    --primary:        oklch(0.580 0.110 201);
+    --primary-soft:   oklch(0.200 0.040 210);
+    --primary-hover:  oklch(0.650 0.120 200);
+    --accent:         oklch(0.720 0.155 52);
+    --accent-soft:    oklch(0.220 0.050 60);
+    --danger:         oklch(0.640 0.175 28);
+    --danger-soft:    oklch(0.220 0.040 26);
+    --success:        oklch(0.580 0.115 154);
+    --ring:           oklch(0.620 0.095 204);
   }
 }
 
+/* ── Tailwind v4 theme registration ──────────────────────────────────────── */
+@theme inline {
+  /* Colors mapped to CSS vars */
+  --color-bg:             var(--bg);
+  --color-bg-tint:        var(--bg-tint);
+  --color-surface:        var(--surface);
+  --color-surface-tint:   var(--surface-tint);
+  --color-border:         var(--border);
+  --color-border-strong:  var(--border-strong);
+  --color-text:           var(--text);
+  --color-text-soft:      var(--text-soft);
+  --color-text-muted:     var(--text-muted);
+  --color-primary:        var(--primary);
+  --color-primary-soft:   var(--primary-soft);
+  --color-primary-hover:  var(--primary-hover);
+  --color-accent:         var(--accent);
+  --color-accent-soft:    var(--accent-soft);
+  --color-danger:         var(--danger);
+  --color-danger-soft:    var(--danger-soft);
+  --color-success:        var(--success);
+  --color-ring:           var(--ring);
+  --color-score-low:      var(--score-low);
+  --color-score-mid:      var(--score-mid);
+  --color-score-high:     var(--score-high);
+
+  /* Fonts */
+  --font-display: var(--font-newsreader);
+  --font-sans:    var(--font-dm-sans);
+  --font-mono:    var(--font-geist-mono);
+
+  /* ── 02 · TYPOGRAPHY SCALE ────────────────────────────────────────────── */
+  /* display-2xl: Hero / page intro — Newsreader 64px / 1.05 / 300 */
+  --text-display-2xl: 4rem;          /* 64px */
+  --leading-display-2xl: 1.05;
+  --font-weight-display-2xl: 300;
+
+  /* display-xl: Major page title — Newsreader 48px / 1.08 / 400 */
+  --text-display-xl: 3rem;           /* 48px */
+  --leading-display-xl: 1.08;
+
+  /* display-lg: Section header / hero card title — Newsreader 36px / 1.1 / 400 */
+  --text-display-lg: 2.25rem;        /* 36px */
+  --leading-display-lg: 1.1;
+
+  /* display-md: Card title (detail page) — Newsreader 28px / 1.15 / 400 */
+  --text-display-md: 1.75rem;        /* 28px */
+  --leading-display-md: 1.15;
+
+  /* display-sm: Card title (feed) — Newsreader 22px / 1.2 / 400 */
+  --text-display-sm: 1.375rem;       /* 22px */
+  --leading-display-sm: 1.2;
+
+  /* body-xl: Lede / standfirst — DM Sans 18px / 1.55 / 400 */
+  --text-body-xl: 1.125rem;          /* 18px */
+  --leading-body-xl: 1.55;
+
+  /* body-lg: Body, descriptions — DM Sans 16px / 1.55 / 400 */
+  --text-body-lg: 1rem;              /* 16px */
+  --leading-body-lg: 1.55;
+
+  /* body-md: UI default — DM Sans 14px / 1.55 / 400 */
+  --text-body-md: 0.875rem;          /* 14px */
+  --leading-body-md: 1.55;
+
+  /* body-sm: Small UI text — DM Sans 13px / 1.5 / 400 */
+  --text-body-sm: 0.8125rem;         /* 13px */
+  --leading-body-sm: 1.5;
+
+  /* label-md: Buttons, tabs, form labels — DM Sans 14px / 1.3 / 500 */
+  --text-label-md: 0.875rem;         /* 14px */
+  --leading-label-md: 1.3;
+
+  /* label-sm: Chips, tags — DM Sans 12px / 1.3 / 500 */
+  --text-label-sm: 0.75rem;          /* 12px */
+  --leading-label-sm: 1.3;
+
+  /* caption: Captions, helper text — DM Sans 12px / 1.45 / 400 */
+  --text-caption: 0.75rem;           /* 12px */
+  --leading-caption: 1.45;
+
+  /* overline: Eyebrow labels uppercase — DM Sans 11px / 1.4 / 500 */
+  --text-overline: 0.6875rem;        /* 11px */
+  --leading-overline: 1.4;
+
+  /* mono-sm: Meta · timestamps · IDs — Geist Mono 12px / 1.45 / 500 */
+  --text-mono-sm: 0.75rem;           /* 12px */
+  --leading-mono-sm: 1.45;
+
+  /* ── 03 · SPACING (4px base) ─────────────────────────────────────────── */
+  --spacing-0\.5: 0.125rem;   /* 2px  */
+  --spacing-1:    0.25rem;    /* 4px  */
+  --spacing-2:    0.5rem;     /* 8px  */
+  --spacing-3:    0.75rem;    /* 12px */
+  --spacing-4:    1rem;       /* 16px */
+  --spacing-5:    1.25rem;    /* 20px */
+  --spacing-6:    1.5rem;     /* 24px */
+  --spacing-8:    2rem;       /* 32px */
+  --spacing-10:   2.5rem;     /* 40px */
+  --spacing-12:   3rem;       /* 48px */
+  --spacing-16:   4rem;       /* 64px */
+  --spacing-20:   5rem;       /* 80px */
+  --spacing-24:   6rem;       /* 96px */
+
+  /* ── 04 · BORDER RADIUS ──────────────────────────────────────────────── */
+  --radius-none: 0;           /* Hairlines, dividers */
+  --radius-sm:   0.375rem;    /* 6px  — Tags, dense chips */
+  --radius-md:   0.625rem;    /* 10px — Inputs, small buttons */
+  --radius-lg:   0.875rem;    /* 14px — Cards (default) */
+  --radius-xl:   1.125rem;    /* 18px — Large cards */
+  --radius-2xl:  1.5rem;      /* 24px — Hero cards, modals */
+  --radius-full: 9999px;      /* Pills, avatars */
+
+  /* ── 05 · SHADOWS (soft, warm) ───────────────────────────────────────── */
+  --shadow-xs: 0 1px 2px oklch(0.180 0.014 60 / 0.04);
+  --shadow-sm: 0 1px 3px oklch(0.180 0.014 60 / 0.06), 0 1px 2px oklch(0.180 0.014 60 / 0.04);
+  --shadow-md: 0 4px 6px oklch(0.180 0.014 60 / 0.05), 0 2px 4px oklch(0.180 0.014 60 / 0.04);
+  --shadow-lg: 0 10px 15px oklch(0.180 0.014 60 / 0.06), 0 4px 6px oklch(0.180 0.014 60 / 0.04);
+  --shadow-xl: 0 20px 25px oklch(0.180 0.014 60 / 0.07), 0 8px 10px oklch(0.180 0.014 60 / 0.04);
+  --shadow-ring: 0 0 0 3px var(--ring);
+}
+
+/* ── Base styles ──────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans, "DM Sans", system-ui, sans-serif);
+  font-size: var(--text-body-lg);
+  line-height: var(--leading-body-lg);
+}
+
+/* ── Typography utilities ─────────────────────────────────────────────────── */
+.font-display {
+  font-family: var(--font-display, "Newsreader", Georgia, serif);
+}
+
+.text-display-2xl {
+  font-family: var(--font-display, "Newsreader", Georgia, serif);
+  font-size: var(--text-display-2xl);
+  line-height: var(--leading-display-2xl);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+}
+
+.text-display-xl {
+  font-family: var(--font-display, "Newsreader", Georgia, serif);
+  font-size: var(--text-display-xl);
+  line-height: var(--leading-display-xl);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+}
+
+.text-display-lg {
+  font-family: var(--font-display, "Newsreader", Georgia, serif);
+  font-size: var(--text-display-lg);
+  line-height: var(--leading-display-lg);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+.text-display-md {
+  font-family: var(--font-display, "Newsreader", Georgia, serif);
+  font-size: var(--text-display-md);
+  line-height: var(--leading-display-md);
+  font-weight: 400;
+}
+
+.text-display-sm {
+  font-family: var(--font-display, "Newsreader", Georgia, serif);
+  font-size: var(--text-display-sm);
+  line-height: var(--leading-display-sm);
+  font-weight: 400;
+}
+
+.text-body-xl {
+  font-size: var(--text-body-xl);
+  line-height: var(--leading-body-xl);
+  font-weight: 400;
+}
+
+.text-body-lg {
+  font-size: var(--text-body-lg);
+  line-height: var(--leading-body-lg);
+  font-weight: 400;
+}
+
+.text-body-md {
+  font-size: var(--text-body-md);
+  line-height: var(--leading-body-md);
+  font-weight: 400;
+}
+
+.text-body-sm {
+  font-size: var(--text-body-sm);
+  line-height: var(--leading-body-sm);
+  font-weight: 400;
+}
+
+.text-label-md {
+  font-size: var(--text-label-md);
+  line-height: var(--leading-label-md);
+  font-weight: 500;
+}
+
+.text-label-sm {
+  font-size: var(--text-label-sm);
+  line-height: var(--leading-label-sm);
+  font-weight: 500;
+}
+
+.text-caption {
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  font-weight: 400;
+}
+
+.text-overline {
+  font-size: var(--text-overline);
+  line-height: var(--leading-overline);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.text-mono-sm {
+  font-family: var(--font-mono, "Geist Mono", ui-monospace, monospace);
+  font-size: var(--text-mono-sm);
+  line-height: var(--leading-mono-sm);
+  font-weight: 500;
 }
