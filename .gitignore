@@ -42,3 +42,9 @@ next-env.d.ts
 
 # PDFs
 *.pdf
+
+# Supabase local temp (contains project ref, pooler URL, org IDs — sensitive)
+supabase/.temp/
+
+# Tool caches (local only)
+.token-savior-cache.json
