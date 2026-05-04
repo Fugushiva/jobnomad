@@ -52,14 +52,14 @@ jobs:
       - run: npm ci --prefer-offline
 
       # Cache Next.js build
-      - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: .next/cache
           key: next-e2e-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/*.ts', '**/*.tsx') }}
           restore-keys: next-e2e-${{ hashFiles('**/package-lock.json') }}-
 
       # Cache Playwright browsers
-      - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
