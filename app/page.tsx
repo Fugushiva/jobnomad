@@ -62,14 +62,14 @@ export default function Home() {
           {/* Actions */}
           <nav className="flex items-center gap-2">
             <a
-              href="/signin"
+              href="/auth/login"
               className="text-label-md px-3 py-1.5 rounded-md transition-colors"
               style={{ color: "var(--text-soft)" }}
             >
               Sign in
             </a>
             <a
-              href="/signup"
+              href="/auth/login"
               className="text-label-md px-4 py-1.5 rounded-md transition-colors"
               style={{
                 backgroundColor: "var(--primary)",
@@ -118,7 +118,7 @@ export default function Home() {
           {/* CTA */}
           <div className="flex flex-wrap items-center justify-center gap-3">
             <a
-              href="/signup"
+              href="/auth/login"
               className="text-label-md inline-flex items-center gap-2 px-6 py-3 transition-colors"
               style={{
                 backgroundColor: "var(--primary)",
