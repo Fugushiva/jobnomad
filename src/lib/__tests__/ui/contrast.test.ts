@@ -1,4 +1,4 @@
-/**
+﻿/**
  * WCAG 2.1 AA Contrast tests — JobNomad design system
  *
  * Validates that critical color pairings from style.pdf (page 3) meet
@@ -19,7 +19,7 @@
 
 import { describe, it, expect } from 'vitest'
 
-// ── Colour conversion: OKLCh → relative luminance ────────────────────────────
+// -- Colour conversion: OKLCh → relative luminance ----------------------------
 
 function oklchToOklab(l: number, c: number, h: number): [number, number, number] {
   const hRad = (h * Math.PI) / 180
@@ -71,7 +71,7 @@ function contrastRatio(l1: number, l2: number): number {
   return (lighter + 0.05) / (darker + 0.05)
 }
 
-// ── Token values (must match globals.css) ────────────────────────────────────
+// -- Token values (must match globals.css) ------------------------------------
 // Format: [L, C, H] matching oklch(L C H) in CSS
 const T = {
   light: {
@@ -105,7 +105,7 @@ function cr(theme: 'light' | 'dark', fg: string, bg: string): number {
   return contrastRatio(fgL, bgL)
 }
 
-// ── Tests ────────────────────────────────────────────────────────────────────
+// -- Tests --------------------------------------------------------------------
 
 describe('WCAG 2.1 AA — contrast ratios (style.pdf pairings)', () => {
   describe('Light theme', () => {

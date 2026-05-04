@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import type { Metadata } from 'next'
 
 import { Header } from '@/components/layout/header'
@@ -58,7 +58,7 @@ export default function Home() {
       <Header variant="public" />
 
       <main id="main" className="flex flex-col flex-1">
-        {/* ── Hero ───────────────────────────────────────────────────────── */}
+        {/* -- Hero --------------------------------------------------------- */}
         <section
           className="flex flex-col items-center text-center px-6 pt-20 pb-16 bg-bg"
           aria-labelledby="hero-heading"
@@ -97,7 +97,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Sample job cards ─────────────────────────────────────────── */}
+        {/* -- Sample job cards ------------------------------------------- */}
         <section
           className="flex-1 px-6 py-16 bg-bg-tint"
           aria-labelledby="sample-jobs-heading"

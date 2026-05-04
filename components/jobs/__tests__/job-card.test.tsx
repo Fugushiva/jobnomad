@@ -1,4 +1,4 @@
-/**
+﻿/**
  * JobCard, ScoreBadge, RedFlagBadge tests
  */
 import { describe, it, expect, vi, afterEach } from 'vitest'
@@ -16,7 +16,7 @@ vi.mock('next/link', () => ({
   ),
 }))
 
-// ── ScoreBadge ─────────────────────────────────────────────────────────────
+// -- ScoreBadge -------------------------------------------------------------
 
 describe('ScoreBadge', () => {
   it('renders score value', () => {
@@ -58,7 +58,7 @@ describe('ScoreBadge', () => {
   })
 })
 
-// ── RedFlagBadge ────────────────────────────────────────────────────────────
+// -- RedFlagBadge ------------------------------------------------------------
 
 describe('RedFlagBadge', () => {
   it('renders default label', () => {
@@ -84,7 +84,7 @@ describe('RedFlagBadge', () => {
   })
 })
 
-// ── JobCard ─────────────────────────────────────────────────────────────────
+// -- JobCard -----------------------------------------------------------------
 
 const BASE_JOB: JobCardData = {
   id: 'job-1',

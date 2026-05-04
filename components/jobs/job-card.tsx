@@ -1,4 +1,4 @@
-/**
+﻿/**
  * JobCard — the core job listing card component.
  *
  * Two variants:
@@ -33,7 +33,7 @@ import { ScoreBadge } from './score-badge'
 import { RedFlagBadge } from './red-flag-badge'
 import { cn } from '@/lib/utils'
 
-// ── Job data schema (reusable across feed + detail pages) ────────────────────
+// -- Job data schema (reusable across feed + detail pages) --------------------
 export const jobCardSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -100,7 +100,7 @@ export function JobCard({
         className
       )}
     >
-      {/* ── Card header ──────────────────────────────────────────────────── */}
+      {/* -- Card header ---------------------------------------------------- */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-col gap-0.5 min-w-0">
           {/* Company overline */}
@@ -139,12 +139,12 @@ export function JobCard({
         </div>
       </div>
 
-      {/* ── Meta row (timezone · type · posted) ──────────────────────────── */}
+      {/* -- Meta row (timezone · type · posted) ---------------------------- */}
       {meta && (
         <p className="text-mono-sm text-text-muted">{meta}</p>
       )}
 
-      {/* ── Tags ─────────────────────────────────────────────────────────── */}
+      {/* -- Tags ----------------------------------------------------------- */}
       {tags && tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5" role="list" aria-label="Skills">
           {tags.map((tag) => (
@@ -155,7 +155,7 @@ export function JobCard({
         </div>
       )}
 
-      {/* ── Red flags ────────────────────────────────────────────────────── */}
+      {/* -- Red flags ------------------------------------------------------ */}
       {redFlags && redFlags.length > 0 && (
         <div
           className="flex flex-wrap gap-1.5"
@@ -173,7 +173,7 @@ export function JobCard({
         </div>
       )}
 
-      {/* ── Footer: salary + apply button ────────────────────────────────── */}
+      {/* -- Footer: salary + apply button ---------------------------------- */}
       <div className="flex items-center justify-between gap-3 mt-1">
         {salary ? (
           <span className="text-label-md text-text-soft">{salary}</span>

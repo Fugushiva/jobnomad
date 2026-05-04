@@ -1,4 +1,4 @@
-import * as React from "react"
+﻿import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
@@ -16,14 +16,14 @@ const badgeVariants = cva(
           "border-border text-text",
         destructive:
           "border-transparent bg-danger text-surface shadow-xs hover:bg-coral-700",
-        /* ── JobNomad match score variants ── */
+        /* -- JobNomad match score variants -- */
         "score-high":
           "border-transparent bg-score-high-soft text-score-high px-2 py-0.5 tabular-nums",
         "score-mid":
           "border-transparent bg-score-mid-soft text-score-mid px-2 py-0.5 tabular-nums",
         "score-low":
           "border-transparent bg-score-low-soft text-score-low px-2 py-0.5 tabular-nums",
-        /* ── Red flag — coral, for warning signals on job listings ── */
+        /* -- Red flag — coral, for warning signals on job listings -- */
         "red-flag":
           "border-transparent bg-danger-soft text-danger gap-1.5",
       },

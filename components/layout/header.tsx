@@ -55,6 +55,18 @@ const NAV_LINKS_APP = [
   { href: '/saved', label: 'Saved' },
 ]
 
+/**
+ * ThemeToggle — theme switcher with hydration-safe icon rendering.
+ *
+ * next-themes resolves the theme client-side (localStorage/cookie).
+ * On the server, `theme` is undefined — the icon defaults to Monitor.
+ * On the client after hydration, it resolves to 'dark'/'light'/'system'.
+ *
+ * The <span suppressHydrationWarning> tells React to skip reconciling its
+ * children's attributes during hydration. This is the correct pattern for
+ * values that intentionally differ between SSR and client first-render.
+ * React only suppresses one level deep — the span itself is stable.
+ */
 function ThemeToggle() {
   const { theme, setTheme } = useTheme()
 
@@ -72,7 +84,14 @@ function ThemeToggle() {
           aria-label="Toggle theme"
           className="text-text-muted hover:text-text"
         >
-          <ThemeIcon className="h-4 w-4" />
+          {/*
+           * suppressHydrationWarning on this span: the icon className
+           * (lucide-moon vs lucide-monitor) differs between SSR and client.
+           * React skips hydration comparison for this element's children.
+           */}
+          <span suppressHydrationWarning>
+            <ThemeIcon className="h-4 w-4" aria-hidden />
+          </span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
