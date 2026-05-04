@@ -58,3 +58,4 @@ supabase/.branches/
 
 # Tool caches (local only)
 .token-savior-cache.json
+.claude/
