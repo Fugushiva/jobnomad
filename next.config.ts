@@ -16,13 +16,18 @@ const nextConfig: NextConfig = {
    * Security headers applied to all routes.
    * See OWASP Secure Headers Project:
    * https://owasp.org/www-project-secure-headers/
+   *
+   * CSP note (phase 2): Radix UI portals inject elements into <body> and
+   * Tailwind v4 requires 'unsafe-inline' for style-src. A strict nonce-based
+   * CSP is planned for phase 2 after assessing server-side nonce injection.
+   * Tracked in: https://github.com/Fugushiva/jobnomad/issues (phase 2 backlog)
    */
   async headers() {
     return [
       {
         source: '/:path*',
         headers: [
-          // Prevent clickjacking
+          // Prevent clickjacking — DENY is correct; we never embed as iframe
           { key: 'X-Frame-Options', value: 'DENY' },
           // Prevent MIME-type sniffing
           { key: 'X-Content-Type-Options', value: 'nosniff' },
@@ -38,10 +43,14 @@ const nextConfig: NextConfig = {
             key: 'Strict-Transport-Security',
             value: 'max-age=63072000; includeSubDomains; preload',
           },
-          // XSS protection (legacy browsers)
+          // XSS protection (legacy browsers) — belt-and-suspenders with CSP
           { key: 'X-XSS-Protection', value: '1; mode=block' },
           // Prevent DNS prefetch leaks
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
+          // Cross-Origin-Resource-Policy — prevent spectre attacks on resources
+          { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' },
+          // Cross-Origin-Opener-Policy — isolate browsing context
+          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
         ],
       },
     ]

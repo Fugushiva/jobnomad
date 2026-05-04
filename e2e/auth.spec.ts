@@ -128,6 +128,9 @@ test.describe('Security headers', () => {
     expect(headers['referrer-policy']).toBe('strict-origin-when-cross-origin')
     expect(headers['x-xss-protection']).toBe('1; mode=block')
     expect(headers['permissions-policy']).toBeDefined()
+    // Phase 1 additions (C12)
+    expect(headers['cross-origin-resource-policy']).toBe('same-origin')
+    expect(headers['cross-origin-opener-policy']).toBe('same-origin')
   })
 })
 
