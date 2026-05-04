@@ -98,11 +98,6 @@ const T = {
   },
 }
 
-function lum(theme: 'light' | 'dark', token: keyof typeof T.light | keyof typeof T.dark): number {
-  const t = (T[theme] as Record<string, [number, number, number]>)[token]
-  return oklchLuminance(t[0], t[1], t[2])
-}
-
 function cr(theme: 'light' | 'dark', fg: string, bg: string): number {
   const tokens = T[theme] as Record<string, [number, number, number]>
   const fgL = oklchLuminance(...tokens[fg])

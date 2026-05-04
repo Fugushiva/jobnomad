@@ -1,4 +1,10 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
+import { User } from 'lucide-react'
+import { Header } from '@/components/layout/header'
+import { Footer } from '@/components/layout/footer'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 
 export const metadata: Metadata = {
   title: 'Complete your profile — JobNomad',
@@ -8,69 +14,45 @@ export const metadata: Metadata = {
 /**
  * /onboarding — Profile setup page (stub).
  *
- * Will collect: preferred_title, skills, timezone, salary_range,
- * work_style preferences. For now: placeholder with auth confirmation.
+ * Refactored: uses Header, Footer, Card, Button, Lucide icon.
+ * Full 4-step wizard implementation in a future issue (F-M03 spec).
  */
 export default function OnboardingPage() {
   return (
-    <div
-      className="flex flex-col flex-1 items-center justify-center px-6 py-12"
-      style={{ backgroundColor: 'var(--bg)' }}
-    >
-      <div
-        className="w-full max-w-lg flex flex-col items-center text-center gap-6 p-8 border"
-        style={{
-          backgroundColor: 'var(--surface)',
-          borderColor: 'var(--border)',
-          borderRadius: 'var(--radius-2xl)',
-          boxShadow: 'var(--shadow-md)',
-        }}
+    <div className="flex flex-col flex-1 bg-bg text-text">
+      <Header variant="app" />
+
+      <main
+        id="main"
+        className="flex flex-col flex-1 items-center justify-center px-6 py-12"
       >
-        <div
-          className="flex items-center justify-center w-14 h-14 rounded-full"
-          style={{ backgroundColor: 'var(--accent-soft)' }}
-        >
-          <svg
-            width="28"
-            height="28"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="var(--accent)"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <line x1="19" y1="8" x2="19" y2="14" />
-            <line x1="22" y1="11" x2="16" y2="11" />
-          </svg>
-        </div>
+        <Card className="w-full max-w-lg rounded-2xl shadow-md">
+          <CardHeader className="flex flex-col items-center text-center gap-4">
+            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-accent-soft">
+              <User className="h-7 w-7 text-accent" aria-hidden />
+            </div>
+            <div>
+              <h1 className="text-display-lg text-text">Complete your profile</h1>
+              <p className="text-body-lg text-text-soft mt-2">
+                Tell us about your skills, timezone, and preferences so we can
+                match you with the right remote roles.
+              </p>
+            </div>
+          </CardHeader>
 
-        <h1 className="text-display-lg" style={{ color: 'var(--text)' }}>
-          Complete your profile
-        </h1>
-        <p className="text-body-lg" style={{ color: 'var(--text-soft)' }}>
-          Tell us about your skills, timezone, and preferences so we can match
-          you with the right remote roles.
-        </p>
-        <p className="text-body-md" style={{ color: 'var(--text-muted)' }}>
-          Profile setup form coming soon.
-        </p>
+          <CardContent className="flex flex-col items-center gap-4 pt-0">
+            <p className="text-body-md text-text-muted text-center">
+              Profile setup form coming soon (4-step wizard).
+            </p>
 
-        <a
-          href="/feed"
-          className="text-label-md px-4 py-2 transition-colors"
-          style={{
-            backgroundColor: 'var(--primary)',
-            color: 'var(--surface)',
-            borderRadius: 'var(--radius-md)',
-          }}
-        >
-          Go to feed
-        </a>
-      </div>
+            <Button asChild>
+              <Link href="/feed">Go to feed</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </main>
+
+      <Footer variant="minimal" />
     </div>
   )
 }

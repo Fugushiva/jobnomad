@@ -1,5 +1,9 @@
 import type { Metadata } from 'next'
+import { Bookmark } from 'lucide-react'
 import { getUser } from '@/src/lib/auth/get-user'
+import { Header } from '@/components/layout/header'
+import { Footer } from '@/components/layout/footer'
+import { EmptyState } from '@/components/states/empty-state'
 
 export const metadata: Metadata = {
   title: 'Your feed — JobNomad',
@@ -7,78 +11,39 @@ export const metadata: Metadata = {
 }
 
 /**
- * /feed — Main authenticated page (stub).
+ * /feed — Authenticated feed page (stub).
  *
- * Will show personalized job matches once the scoring pipeline is built.
- * For now: confirms the user is authenticated and shows a placeholder.
+ * Refactored: uses Header (app variant), Footer, EmptyState components.
+ * Full implementation in a future issue (F-M05/F-M06 spec).
  */
 export default async function FeedPage() {
   const { user } = await getUser()
 
   return (
-    <div
-      className="flex flex-col flex-1 items-center justify-center px-6 py-12"
-      style={{ backgroundColor: 'var(--bg)' }}
-    >
-      <div
-        className="w-full max-w-lg flex flex-col items-center text-center gap-6 p-8 border"
-        style={{
-          backgroundColor: 'var(--surface)',
-          borderColor: 'var(--border)',
-          borderRadius: 'var(--radius-2xl)',
-          boxShadow: 'var(--shadow-md)',
-        }}
-      >
-        <div
-          className="flex items-center justify-center w-14 h-14 rounded-full"
-          style={{ backgroundColor: 'var(--primary-soft)' }}
-        >
-          <svg
-            width="28"
-            height="28"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="var(--primary)"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M12 20h9" />
-            <path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z" />
-          </svg>
+    <div className="flex flex-col flex-1 bg-bg text-text">
+      <Header variant="app" userEmail={user?.email} />
+
+      <main id="main" className="flex flex-col flex-1 px-6 py-12">
+        <div className="mx-auto w-full max-w-4xl">
+          <div className="mb-8">
+            <h1 className="text-display-lg text-text">Your feed</h1>
+            <p className="text-body-lg text-text-soft mt-1">
+              Signed in as{' '}
+              <span className="text-mono-sm text-primary">{user?.email}</span>
+            </p>
+          </div>
+
+          {/* Feed placeholder — replace with real DB query in F-M05 */}
+          <EmptyState
+            icon={Bookmark}
+            heading="Your feed is coming soon"
+            description="Complete your profile to receive personalized remote job matches."
+            action={{ label: 'Complete profile', href: '/onboarding' }}
+          />
         </div>
+      </main>
 
-        <h1 className="text-display-lg" style={{ color: 'var(--text)' }}>
-          Welcome back
-        </h1>
-        <p className="text-body-lg" style={{ color: 'var(--text-soft)' }}>
-          Signed in as{' '}
-          <span className="text-mono-sm" style={{ color: 'var(--primary)' }}>
-            {user?.email}
-          </span>
-        </p>
-        <p className="text-body-md" style={{ color: 'var(--text-muted)' }}>
-          Your personalized job feed is coming soon.
-          Complete your profile to start receiving matches.
-        </p>
-
-        {/* Sign out form (POST for CSRF safety) */}
-        <form action="/auth/signout" method="POST">
-          <button
-            type="submit"
-            className="text-label-md px-4 py-2 border transition-colors"
-            style={{
-              borderColor: 'var(--border-strong)',
-              color: 'var(--text)',
-              borderRadius: 'var(--radius-md)',
-              backgroundColor: 'var(--surface)',
-            }}
-          >
-            Sign out
-          </button>
-        </form>
-      </div>
+      <Footer variant="minimal" />
     </div>
   )
 }
