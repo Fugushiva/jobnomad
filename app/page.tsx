@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export default function Home() {
   return (
     <div
@@ -14,7 +16,7 @@ export default function Home() {
       >
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
           {/* Logo lockup */}
-          <a href="/" className="flex items-center gap-2.5 no-underline">
+          <Link href="/" className="flex items-center gap-2.5 no-underline">
             {/* Brand mark — sun on horizon */}
             <svg
               width="28"
@@ -57,18 +59,18 @@ export default function Home() {
             >
               JobNomad<span style={{ color: "var(--accent)" }}>.</span>
             </span>
-          </a>
+          </Link>
 
           {/* Actions */}
           <nav className="flex items-center gap-2">
-            <a
+            <Link
               href="/auth/login"
               className="text-label-md px-3 py-1.5 rounded-md transition-colors"
               style={{ color: "var(--text-soft)" }}
             >
               Sign in
-            </a>
-            <a
+            </Link>
+            <Link
               href="/auth/login"
               className="text-label-md px-4 py-1.5 rounded-md transition-colors"
               style={{
@@ -78,7 +80,7 @@ export default function Home() {
               }}
             >
               Get started
-            </a>
+            </Link>
           </nav>
         </div>
       </header>
@@ -117,7 +119,7 @@ export default function Home() {
 
           {/* CTA */}
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <a
+            <Link
               href="/auth/login"
               className="text-label-md inline-flex items-center gap-2 px-6 py-3 transition-colors"
               style={{
@@ -128,8 +130,8 @@ export default function Home() {
               }}
             >
               Start for free
-            </a>
-            <a
+            </Link>
+            <Link
               href="/jobs"
               className="text-label-md inline-flex items-center gap-2 px-6 py-3 border transition-colors"
               style={{
@@ -140,7 +142,7 @@ export default function Home() {
               }}
             >
               Browse jobs
-            </a>
+            </Link>
           </div>
         </section>
 
@@ -257,14 +259,14 @@ export default function Home() {
           </span>
           <nav className="flex gap-5">
             {["Privacy", "Terms", "Status"].map((item) => (
-              <a
+              <Link
                 key={item}
                 href={`/${item.toLowerCase()}`}
                 className="text-caption transition-colors"
                 style={{ color: "var(--text-muted)" }}
               >
                 {item}
-              </a>
+              </Link>
             ))}
           </nav>
         </div>

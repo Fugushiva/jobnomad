@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { LoginForm } from './login-form'
 
 export const metadata: Metadata = {
@@ -28,7 +29,7 @@ export default function LoginPage() {
         }}
       >
         {/* Logo */}
-        <a href="/" className="flex items-center gap-2.5 no-underline">
+        <Link href="/" className="flex items-center gap-2.5 no-underline">
           <svg
             width="28"
             height="20"
@@ -50,7 +51,7 @@ export default function LoginPage() {
           <span className="text-display-sm" style={{ letterSpacing: '-0.035em' }}>
             JobNomad<span style={{ color: 'var(--accent)' }}>.</span>
           </span>
-        </a>
+        </Link>
 
         {/* Heading */}
         <div className="flex flex-col items-center text-center gap-2">
@@ -69,13 +70,13 @@ export default function LoginPage() {
       </div>
 
       {/* Back to home */}
-      <a
+      <Link
         href="/"
         className="text-body-sm mt-6 transition-colors"
         style={{ color: 'var(--text-muted)' }}
       >
         &larr; Back to home
-      </a>
+      </Link>
     </div>
   )
 }
