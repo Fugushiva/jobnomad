@@ -1,13 +1,72 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 /* ─── JobNomad · Foundations v0.1 ──────────────────────────────────────────
    Tokens are written in OKLCh for direct paste into Tailwind v4 / shadcn.
    Light and dark are designed in parallel — same warmth in both.
+   Dark mode: class-based (.dark on <html>) via next-themes, defaultTheme="dark"
    ──────────────────────────────────────────────────────────────────────────── */
 
-/* ── 01 · PALETTE ─────────────────────────────────────────────────────────── */
+/* ── 01 · PALETTE — Full scale 50→950 (OKLCh) ────────────────────────────── */
+/* Lagoon (primary) — brand, trust signal, high-match                        */
+/* Sun (accent) — warmth, emphasis, mid-match                                */
+/* Sand (neutrals) — surfaces, text, lines                                   */
+/* Coral (semantic) — red flags only, use sparingly                          */
+
 :root {
-  /* Surfaces & text */
+  /* ── Lagoon (primary) scale ── */
+  --lagoon-50:  oklch(0.970 0.018 210);
+  --lagoon-100: oklch(0.945 0.030 210);
+  --lagoon-200: oklch(0.880 0.055 205);
+  --lagoon-300: oklch(0.780 0.085 203);
+  --lagoon-400: oklch(0.650 0.105 202);
+  --lagoon-500: oklch(0.530 0.110 201);
+  --lagoon-600: oklch(0.470 0.092 201);  /* --primary */
+  --lagoon-700: oklch(0.400 0.080 200);
+  --lagoon-800: oklch(0.330 0.065 199);
+  --lagoon-900: oklch(0.250 0.048 198);
+  --lagoon-950: oklch(0.180 0.032 197);
+
+  /* ── Sun (accent) scale ── */
+  --sun-50:  oklch(0.980 0.015 70);
+  --sun-100: oklch(0.960 0.028 68);
+  --sun-200: oklch(0.920 0.050 65);
+  --sun-300: oklch(0.860 0.080 60);
+  --sun-400: oklch(0.780 0.115 55);
+  --sun-500: oklch(0.720 0.148 52);
+  --sun-600: oklch(0.660 0.148 52);   /* --accent */
+  --sun-700: oklch(0.580 0.130 48);
+  --sun-800: oklch(0.490 0.105 44);
+  --sun-900: oklch(0.380 0.075 42);
+  --sun-950: oklch(0.280 0.050 40);
+
+  /* ── Sand (neutrals) scale ── */
+  --sand-50:  oklch(0.990 0.004 80);
+  --sand-100: oklch(0.975 0.008 78);
+  --sand-200: oklch(0.950 0.014 76);
+  --sand-300: oklch(0.910 0.020 74);
+  --sand-400: oklch(0.840 0.026 72);
+  --sand-500: oklch(0.740 0.030 70);
+  --sand-600: oklch(0.620 0.028 68);
+  --sand-700: oklch(0.490 0.022 66);
+  --sand-800: oklch(0.360 0.016 64);
+  --sand-900: oklch(0.240 0.012 62);
+  --sand-950: oklch(0.160 0.010 60);
+
+  /* ── Coral (semantic) scale — red flags only ── */
+  --coral-50:  oklch(0.970 0.018 28);
+  --coral-100: oklch(0.940 0.032 26);
+  --coral-200: oklch(0.890 0.060 25);
+  --coral-300: oklch(0.810 0.100 24);
+  --coral-400: oklch(0.710 0.145 26);
+  --coral-500: oklch(0.620 0.165 27);
+  --coral-600: oklch(0.560 0.168 28);  /* --danger */
+  --coral-700: oklch(0.480 0.148 28);
+  --coral-800: oklch(0.390 0.118 28);
+  --coral-900: oklch(0.300 0.085 28);
+  --coral-950: oklch(0.210 0.055 28);
+
+  /* ── Surfaces & text — light theme ── */
   --bg:             oklch(0.985 0.006 78);
   --bg-tint:        oklch(0.970 0.010 76);
   --surface:        oklch(1 0 0);
@@ -18,7 +77,7 @@
   --text-soft:      oklch(0.480 0.018 66);
   --text-muted:     oklch(0.760 0.022 70);
 
-  /* Brand & state */
+  /* ── Brand & state ── */
   --primary:        oklch(0.470 0.092 201);
   --primary-soft:   oklch(0.945 0.025 210);
   --primary-hover:  oklch(0.380 0.078 200);
@@ -27,42 +86,144 @@
   --danger:         oklch(0.560 0.168 28);
   --danger-soft:    oklch(0.940 0.032 26);
   --success:        oklch(0.510 0.110 154);
+  --success-soft:   oklch(0.940 0.028 154);
+  --warning:        oklch(0.720 0.148 52);
+  --warning-soft:   oklch(0.960 0.025 68);
   --ring:           oklch(0.700 0.092 204);
 
-  /* Match score thresholds */
-  --score-low:  oklch(0.560 0.168 28);   /* 0–59   coral */
-  --score-mid:  oklch(0.660 0.148 52);   /* 60–84  sun   */
-  --score-high: oklch(0.470 0.092 201);  /* 85–100 lagoon */
+  /* ── Match score thresholds ── */
+  --score-low:      oklch(0.560 0.168 28);   /* 0–59   coral */
+  --score-mid:      oklch(0.660 0.148 52);   /* 60–84  sun   */
+  --score-high:     oklch(0.470 0.092 201);  /* 85–100 lagoon */
+  --score-low-soft: oklch(0.940 0.032 26);
+  --score-mid-soft: oklch(0.952 0.030 68);
+  --score-high-soft: oklch(0.945 0.025 210);
+
+  /* ── shadcn/ui standard token mapping ── */
+  /* These allow shadcn components to work out of the box */
+  --background:       var(--bg);
+  --foreground:       var(--text);
+  --card:             var(--surface);
+  --card-foreground:  var(--text);
+  --popover:          var(--surface);
+  --popover-foreground: var(--text);
+  --muted:            var(--bg-tint);
+  --muted-foreground: var(--text-muted);
+  --accent-bg:        var(--accent-soft);
+  --accent-foreground: var(--text);
+  --destructive:      var(--danger);
+  --destructive-foreground: oklch(1 0 0);
+  --border-default:   var(--border);
+  --input:            var(--border);
+  --ring-default:     var(--ring);
+  --radius:           0.625rem;   /* radius-md = 10px */
 }
 
-/* ── Dark mode ─────────────────────────────────────────────────────────────── */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg:             oklch(0.130 0.010 60);
-    --bg-tint:        oklch(0.150 0.012 62);
-    --surface:        oklch(0.175 0.012 62);
-    --surface-tint:   oklch(0.190 0.014 64);
-    --border:         oklch(0.260 0.016 66);
-    --border-strong:  oklch(0.320 0.018 68);
-    --text:           oklch(0.940 0.008 72);
-    --text-soft:      oklch(0.700 0.016 68);
-    --text-muted:     oklch(0.480 0.018 66);
+/* ── Dark theme (class-based via next-themes defaultTheme="dark") ─────────── */
+.dark {
+  /* ── Surfaces & text — dark theme ── */
+  --bg:             oklch(0.130 0.010 60);
+  --bg-tint:        oklch(0.150 0.012 62);
+  --surface:        oklch(0.175 0.012 62);
+  --surface-tint:   oklch(0.190 0.014 64);
+  --border:         oklch(0.260 0.016 66);
+  --border-strong:  oklch(0.320 0.018 68);
+  --text:           oklch(0.940 0.008 72);
+  --text-soft:      oklch(0.700 0.016 68);
+  --text-muted:     oklch(0.480 0.018 66);
 
-    --primary:        oklch(0.580 0.110 201);
-    --primary-soft:   oklch(0.200 0.040 210);
-    --primary-hover:  oklch(0.650 0.120 200);
-    --accent:         oklch(0.720 0.155 52);
-    --accent-soft:    oklch(0.220 0.050 60);
-    --danger:         oklch(0.640 0.175 28);
-    --danger-soft:    oklch(0.220 0.040 26);
-    --success:        oklch(0.580 0.115 154);
-    --ring:           oklch(0.620 0.095 204);
-  }
+  /* ── Brand & state — dark variants ── */
+  --primary:        oklch(0.580 0.110 201);
+  --primary-soft:   oklch(0.200 0.040 210);
+  --primary-hover:  oklch(0.650 0.120 200);
+  --accent:         oklch(0.720 0.155 52);
+  --accent-soft:    oklch(0.220 0.050 60);
+  --danger:         oklch(0.640 0.175 28);
+  --danger-soft:    oklch(0.220 0.040 26);
+  --success:        oklch(0.580 0.115 154);
+  --success-soft:   oklch(0.200 0.040 154);
+  --warning:        oklch(0.760 0.148 52);
+  --warning-soft:   oklch(0.230 0.045 65);
+  --ring:           oklch(0.620 0.095 204);
+
+  /* ── Match score — dark variants ── */
+  --score-low:      oklch(0.640 0.175 28);
+  --score-mid:      oklch(0.720 0.155 52);
+  --score-high:     oklch(0.580 0.110 201);
+  --score-low-soft: oklch(0.220 0.040 26);
+  --score-mid-soft: oklch(0.220 0.050 60);
+  --score-high-soft: oklch(0.200 0.040 210);
+
+  /* ── shadcn token remapping for dark ── */
+  --background:       var(--bg);
+  --foreground:       var(--text);
+  --card:             var(--surface);
+  --card-foreground:  var(--text);
+  --popover:          var(--surface);
+  --popover-foreground: var(--text);
+  --muted:            var(--bg-tint);
+  --muted-foreground: var(--text-muted);
+  --accent-bg:        var(--accent-soft);
+  --accent-foreground: var(--text);
+  --destructive:      var(--danger);
+  --destructive-foreground: oklch(1 0 0);
+  --border-default:   var(--border);
+  --input:            var(--border);
+  --ring-default:     var(--ring);
 }
 
 /* ── Tailwind v4 theme registration ──────────────────────────────────────── */
 @theme inline {
-  /* Colors mapped to CSS vars */
+  /* ── Color primitives (scale tokens) ── */
+  --color-lagoon-50:  var(--lagoon-50);
+  --color-lagoon-100: var(--lagoon-100);
+  --color-lagoon-200: var(--lagoon-200);
+  --color-lagoon-300: var(--lagoon-300);
+  --color-lagoon-400: var(--lagoon-400);
+  --color-lagoon-500: var(--lagoon-500);
+  --color-lagoon-600: var(--lagoon-600);
+  --color-lagoon-700: var(--lagoon-700);
+  --color-lagoon-800: var(--lagoon-800);
+  --color-lagoon-900: var(--lagoon-900);
+  --color-lagoon-950: var(--lagoon-950);
+
+  --color-sun-50:  var(--sun-50);
+  --color-sun-100: var(--sun-100);
+  --color-sun-200: var(--sun-200);
+  --color-sun-300: var(--sun-300);
+  --color-sun-400: var(--sun-400);
+  --color-sun-500: var(--sun-500);
+  --color-sun-600: var(--sun-600);
+  --color-sun-700: var(--sun-700);
+  --color-sun-800: var(--sun-800);
+  --color-sun-900: var(--sun-900);
+  --color-sun-950: var(--sun-950);
+
+  --color-sand-50:  var(--sand-50);
+  --color-sand-100: var(--sand-100);
+  --color-sand-200: var(--sand-200);
+  --color-sand-300: var(--sand-300);
+  --color-sand-400: var(--sand-400);
+  --color-sand-500: var(--sand-500);
+  --color-sand-600: var(--sand-600);
+  --color-sand-700: var(--sand-700);
+  --color-sand-800: var(--sand-800);
+  --color-sand-900: var(--sand-900);
+  --color-sand-950: var(--sand-950);
+
+  --color-coral-50:  var(--coral-50);
+  --color-coral-100: var(--coral-100);
+  --color-coral-200: var(--coral-200);
+  --color-coral-300: var(--coral-300);
+  --color-coral-400: var(--coral-400);
+  --color-coral-500: var(--coral-500);
+  --color-coral-600: var(--coral-600);
+  --color-coral-700: var(--coral-700);
+  --color-coral-800: var(--coral-800);
+  --color-coral-900: var(--coral-900);
+  --color-coral-950: var(--coral-950);
+
+  /* ── Color semantics ── */
   --color-bg:             var(--bg);
   --color-bg-tint:        var(--bg-tint);
   --color-surface:        var(--surface);
@@ -80,72 +241,91 @@
   --color-danger:         var(--danger);
   --color-danger-soft:    var(--danger-soft);
   --color-success:        var(--success);
+  --color-success-soft:   var(--success-soft);
+  --color-warning:        var(--warning);
+  --color-warning-soft:   var(--warning-soft);
   --color-ring:           var(--ring);
   --color-score-low:      var(--score-low);
   --color-score-mid:      var(--score-mid);
   --color-score-high:     var(--score-high);
+  --color-score-low-soft: var(--score-low-soft);
+  --color-score-mid-soft: var(--score-mid-soft);
+  --color-score-high-soft: var(--score-high-soft);
 
-  /* Fonts */
+  /* ── shadcn standard tokens as Tailwind colors ── */
+  --color-background:      var(--background);
+  --color-foreground:      var(--foreground);
+  --color-card:            var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover:         var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-muted:           var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-destructive:     var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-input:           var(--input);
+
+  /* ── Fonts ── */
   --font-display: var(--font-newsreader);
   --font-sans:    var(--font-dm-sans);
   --font-mono:    var(--font-geist-mono);
 
   /* ── 02 · TYPOGRAPHY SCALE ────────────────────────────────────────────── */
   /* display-2xl: Hero / page intro — Newsreader 64px / 1.05 / 300 */
-  --text-display-2xl: 4rem;          /* 64px */
+  --text-display-2xl: 4rem;
   --leading-display-2xl: 1.05;
   --font-weight-display-2xl: 300;
 
   /* display-xl: Major page title — Newsreader 48px / 1.08 / 400 */
-  --text-display-xl: 3rem;           /* 48px */
+  --text-display-xl: 3rem;
   --leading-display-xl: 1.08;
 
   /* display-lg: Section header / hero card title — Newsreader 36px / 1.1 / 400 */
-  --text-display-lg: 2.25rem;        /* 36px */
+  --text-display-lg: 2.25rem;
   --leading-display-lg: 1.1;
 
   /* display-md: Card title (detail page) — Newsreader 28px / 1.15 / 400 */
-  --text-display-md: 1.75rem;        /* 28px */
+  --text-display-md: 1.75rem;
   --leading-display-md: 1.15;
 
   /* display-sm: Card title (feed) — Newsreader 22px / 1.2 / 400 */
-  --text-display-sm: 1.375rem;       /* 22px */
+  --text-display-sm: 1.375rem;
   --leading-display-sm: 1.2;
 
   /* body-xl: Lede / standfirst — DM Sans 18px / 1.55 / 400 */
-  --text-body-xl: 1.125rem;          /* 18px */
+  --text-body-xl: 1.125rem;
   --leading-body-xl: 1.55;
 
   /* body-lg: Body, descriptions — DM Sans 16px / 1.55 / 400 */
-  --text-body-lg: 1rem;              /* 16px */
+  --text-body-lg: 1rem;
   --leading-body-lg: 1.55;
 
   /* body-md: UI default — DM Sans 14px / 1.55 / 400 */
-  --text-body-md: 0.875rem;          /* 14px */
+  --text-body-md: 0.875rem;
   --leading-body-md: 1.55;
 
   /* body-sm: Small UI text — DM Sans 13px / 1.5 / 400 */
-  --text-body-sm: 0.8125rem;         /* 13px */
+  --text-body-sm: 0.8125rem;
   --leading-body-sm: 1.5;
 
   /* label-md: Buttons, tabs, form labels — DM Sans 14px / 1.3 / 500 */
-  --text-label-md: 0.875rem;         /* 14px */
+  --text-label-md: 0.875rem;
   --leading-label-md: 1.3;
 
   /* label-sm: Chips, tags — DM Sans 12px / 1.3 / 500 */
-  --text-label-sm: 0.75rem;          /* 12px */
+  --text-label-sm: 0.75rem;
   --leading-label-sm: 1.3;
 
   /* caption: Captions, helper text — DM Sans 12px / 1.45 / 400 */
-  --text-caption: 0.75rem;           /* 12px */
+  --text-caption: 0.75rem;
   --leading-caption: 1.45;
 
   /* overline: Eyebrow labels uppercase — DM Sans 11px / 1.4 / 500 */
-  --text-overline: 0.6875rem;        /* 11px */
+  --text-overline: 0.6875rem;
   --leading-overline: 1.4;
 
   /* mono-sm: Meta · timestamps · IDs — Geist Mono 12px / 1.45 / 500 */
-  --text-mono-sm: 0.75rem;           /* 12px */
+  --text-mono-sm: 0.75rem;
   --leading-mono-sm: 1.45;
 
   /* ── 03 · SPACING (4px base) ─────────────────────────────────────────── */
@@ -200,6 +380,31 @@ body {
   font-family: var(--font-sans, "DM Sans", system-ui, sans-serif);
   font-size: var(--text-body-lg);
   line-height: var(--leading-body-lg);
+}
+
+/* ── Focus visible — accessible ring ─────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* ── Skip link — keyboard accessibility ──────────────────────────────────── */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 1rem;
+  z-index: 9999;
+  padding: 0.5rem 1rem;
+  background-color: var(--primary);
+  color: var(--surface);
+  border-radius: var(--radius-md);
+  font-size: var(--text-label-md);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  left: 1rem;
 }
 
 /* ── Typography utilities ─────────────────────────────────────────────────── */
