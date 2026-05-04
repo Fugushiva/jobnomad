@@ -93,11 +93,22 @@ CRON_SECRET=<chaine-aleatoire-32-chars>
 ## Scripts disponibles
 
 ```bash
-npm run dev      # Serveur de développement (Turbopack)
-npm run build    # Build de production
-npm run start    # Serveur de production
-npm run lint     # ESLint
+npm run dev          # Serveur de développement (Turbopack)
+npm run build        # Build de production
+npm run start        # Serveur de production
+npm run lint         # ESLint
+npm run typecheck    # TypeScript (tsc --noEmit)
+npm run test         # Tests unitaires (Vitest)
+npm run test:e2e     # Tests E2E (Playwright)
+npm run test:all     # Unitaires + E2E
 ```
+
+## CI/CD
+
+Chaque PR déclenche automatiquement lint + typecheck + tests + build via GitHub Actions.  
+Les pushes sur `master` déclenchent un déploiement Vercel automatique.
+
+Voir [`docs/ci-cd.md`](docs/ci-cd.md) pour le runbook complet : secrets, rotation CRON_SECRET, debug, variables d'environnement Vercel.
 
 ## Structure du projet
 
