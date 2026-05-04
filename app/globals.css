@@ -133,9 +133,11 @@
   --text-muted:     oklch(0.480 0.018 66);
 
   /* ── Brand & state — dark variants ── */
-  --primary:        oklch(0.580 0.110 201);
-  --primary-soft:   oklch(0.200 0.040 210);
-  --primary-hover:  oklch(0.650 0.120 200);
+  /* primary raised to L=0.680 to achieve ≥3:1 contrast on dark bg (L≈0.130) */
+  --primary:        oklch(0.680 0.110 201);
+  /* primary-soft raised to L=0.240 to achieve ≥3:1 with primary text */
+  --primary-soft:   oklch(0.240 0.045 210);
+  --primary-hover:  oklch(0.720 0.115 200);
   --accent:         oklch(0.720 0.155 52);
   --accent-soft:    oklch(0.220 0.050 60);
   --danger:         oklch(0.640 0.175 28);
