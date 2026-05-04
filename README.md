@@ -99,7 +99,9 @@ npm run start        # Serveur de production
 npm run lint         # ESLint
 npm run typecheck    # TypeScript (tsc --noEmit)
 npm run test         # Tests unitaires (Vitest)
+npm run test:watch   # Tests unitaires en mode watch
 npm run test:e2e     # Tests E2E (Playwright)
+npm run test:e2e:ui  # Tests E2E avec UI interactive
 npm run test:all     # Unitaires + E2E
 ```
 
@@ -108,36 +110,59 @@ npm run test:all     # Unitaires + E2E
 Chaque PR déclenche automatiquement lint + typecheck + tests + build via GitHub Actions.  
 Les pushes sur `master` déclenchent un déploiement Vercel automatique.
 
-Voir [`docs/ci-cd.md`](docs/ci-cd.md) pour le runbook complet : secrets, rotation CRON_SECRET, debug, variables d'environnement Vercel.
+
 
 ## Structure du projet
 
 ```
 jobnomad/
 ├── app/                        # Next.js App Router
-│   ├── api/
-│   │   ├── cron/
-│   │   │   ├── ingest/         # Cron 6h — RemoteOK → Gemini → DB
-│   │   │   ├── digest/         # Cron 1x/jour — email digest
-│   │   │   └── cleanup/        # Cron hebdo — rétention données
-│   │   └── webhooks/
-│   │       └── stripe/         # Webhook Stripe → subscriptions
-│   └── (routes UI)
+│   ├── (protected)/            # Routes authentifiées (RLS)
+│   │   ├── feed/               # Page principale du feed
+│   │   ├── onboarding/         # Onboarding profil utilisateur
+│   │   └── layout.tsx
+│   ├── auth/                   # Pages d'authentification
+│   ├── globals.css             # Tailwind v4 + design tokens
+│   ├── layout.tsx              # Root layout (ThemeProvider)
+│   ├── page.tsx                # Home/landing
+│   └── favicon.ico
+├── components/                 # Composants React réutilisables
+│   ├── ui/                     # 19 shadcn/ui primitives
+│   ├── brand/                  # Logo, LogoMark
+│   ├── layout/                 # Header, Footer, ThemeToggle
+│   ├── jobs/                   # JobCard, ScoreBadge, RedFlagBadge
+│   ├── feed/                   # FeedSkeleton
+│   ├── states/                 # EmptyState, ErrorState
+│   └── providers/              # ThemeProvider
+├── hooks/                      # React hooks
+│   └── use-theme-toggle.ts     # Bascule thème light/dark/system
+├── lib/                        # Utilitaires métier
+│   ├── forms/
+│   │   └── use-zod-form.ts     # react-hook-form + Zod integration
+│   └── utils.ts                # cn() (classnames merge)
 ├── src/
-│   └── lib/
-│       └── supabase/
-│           ├── client.ts       # Client navigateur (Client Components)
-│           ├── server.ts       # Client serveur (Server Components / Actions)
-│           ├── service.ts      # Client service_role (cron + webhooks)
-│           └── database.types.ts  # Types auto-générés — ne pas éditer
+│   └── lib/                    # (Supabase clients, future: business logic)
 ├── supabase/
-│   ├── migrations/             # 16 migrations SQL versionnées
+│   ├── migrations/             # 17 migrations SQL versionnées
 │   ├── tests/                  # Tests RLS + smoke tests fonctions SQL
 │   ├── seed.sql                # Données de dev local
 │   └── config.toml
-└── docs/
-    └── db-schema.md            # ERD, politique de rétention, décisions archi
+├── e2e/                        # Tests Playwright E2E
+│   └── a11y.spec.ts            # 15 tests accessibilité
+├── docs/
+│   ├── db-schema.md            # ERD, politique de rétention, décisions archi
+│   ├── ui.md                   # Guide des composants shadcn/ui
+│   ├── ci-cd.md                # Runbook CI/CD, secrets, rotation
+│   └── auth-setup.md           # Configuration Supabase Auth
+└── public/                     # Ressources statiques
 ```
+
+## Documentation
+
+- **`docs/db-schema.md`** — ERD complet, politique de rétention des données, décisions architecturales
+- **`docs/ui.md`** — Guide des composants shadcn/ui et design system (tokens, accessibility)
+- **`docs/ci-cd.md`** — Runbook complet : secrets, rotation CRON_SECRET, debugging, variables Vercel
+- **`docs/auth-setup.md`** — Configuration Supabase Auth (magic links)
 
 ## Base de données
 
