@@ -2,6 +2,17 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   /**
+   * Remote image domains authorised for next/image optimisation.
+   * Required for job board logos (RemoteOK CDN) and company logos (Clearbit).
+   */
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'remoteok.com' },
+      { protocol: 'https', hostname: 'logo.clearbit.com' },
+    ],
+  },
+
+  /**
    * Security headers applied to all routes.
    * See OWASP Secure Headers Project:
    * https://owasp.org/www-project-secure-headers/
