@@ -1,74 +1,82 @@
 -- =============================================================================
 -- RLS Tests: auth_rate_limits
--- Verifies that anon and authenticated users CANNOT access the table,
--- and that only service_role can read/write/call RPCs.
+-- Verifies that anon and authenticated users have NO privileges on the table
+-- or the rate-limit RPCs, and that only service_role can use them.
+--
+-- NOTE: We use catalog-based assertions (function_privs_are / table_privs_are)
+-- rather than calling the RPCs from the anon/authenticated roles. The Supabase
+-- pg17 dev image (PostgreSQL 17.6 + supautils) crashes the backend with a
+-- SIGSEGV when a role without EXECUTE privilege invokes a user-defined
+-- function. The privilege catalog is the canonical source of truth for the
+-- security boundary anyway, so this test is both safe and equivalent.
 -- =============================================================================
 
 BEGIN;
 
--- Plan: 6 tests
-SELECT plan(6);
+SELECT plan(8);
 
 -- ---------------------------------------------------------------------------
--- Test 1: anon cannot SELECT from auth_rate_limits
+-- Table: auth_rate_limits
+-- anon and authenticated must have ZERO privileges on the table.
+-- service_role must have full DML.
 -- ---------------------------------------------------------------------------
-SET ROLE anon;
-SELECT throws_ok(
-  $$SELECT * FROM public.auth_rate_limits$$,
-  '42501',  -- insufficient_privilege
-  NULL,
-  'anon cannot SELECT from auth_rate_limits'
+
+SELECT table_privs_are(
+  'public', 'auth_rate_limits', 'anon',
+  ARRAY[]::TEXT[],
+  'anon has no privileges on auth_rate_limits'
+);
+
+SELECT table_privs_are(
+  'public', 'auth_rate_limits', 'authenticated',
+  ARRAY[]::TEXT[],
+  'authenticated has no privileges on auth_rate_limits'
+);
+
+SELECT table_privs_are(
+  'public', 'auth_rate_limits', 'service_role',
+  ARRAY['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'TRUNCATE', 'REFERENCES', 'TRIGGER'],
+  'service_role has full privileges on auth_rate_limits'
 );
 
 -- ---------------------------------------------------------------------------
--- Test 2: anon cannot INSERT into auth_rate_limits
+-- RPC: check_auth_rate_limit(text, integer, integer)
+-- Only service_role may EXECUTE.
 -- ---------------------------------------------------------------------------
-SELECT throws_ok(
-  $$INSERT INTO public.auth_rate_limits (ip_hash, attempts, window_start) VALUES ('test_hash', 1, now())$$,
-  '42501',
-  NULL,
-  'anon cannot INSERT into auth_rate_limits'
+
+SELECT function_privs_are(
+  'public', 'check_auth_rate_limit', ARRAY['text', 'integer', 'integer'],
+  'anon', ARRAY[]::TEXT[],
+  'anon cannot EXECUTE check_auth_rate_limit'
+);
+
+SELECT function_privs_are(
+  'public', 'check_auth_rate_limit', ARRAY['text', 'integer', 'integer'],
+  'authenticated', ARRAY[]::TEXT[],
+  'authenticated cannot EXECUTE check_auth_rate_limit'
+);
+
+SELECT function_privs_are(
+  'public', 'check_auth_rate_limit', ARRAY['text', 'integer', 'integer'],
+  'service_role', ARRAY['EXECUTE'],
+  'service_role can EXECUTE check_auth_rate_limit'
 );
 
 -- ---------------------------------------------------------------------------
--- Test 3: anon cannot call check_auth_rate_limit
+-- RPC: cleanup_auth_rate_limits(integer)
+-- Only service_role may EXECUTE.
 -- ---------------------------------------------------------------------------
-SELECT throws_ok(
-  $$SELECT public.check_auth_rate_limit('test_hash')$$,
-  '42501',
-  NULL,
-  'anon cannot call check_auth_rate_limit'
+
+SELECT function_privs_are(
+  'public', 'cleanup_auth_rate_limits', ARRAY['integer'],
+  'authenticated', ARRAY[]::TEXT[],
+  'authenticated cannot EXECUTE cleanup_auth_rate_limits'
 );
 
--- ---------------------------------------------------------------------------
--- Test 4: authenticated cannot SELECT from auth_rate_limits
--- ---------------------------------------------------------------------------
-SET ROLE authenticated;
-SELECT throws_ok(
-  $$SELECT * FROM public.auth_rate_limits$$,
-  '42501',
-  NULL,
-  'authenticated cannot SELECT from auth_rate_limits'
-);
-
--- ---------------------------------------------------------------------------
--- Test 5: authenticated cannot call check_auth_rate_limit
--- ---------------------------------------------------------------------------
-SELECT throws_ok(
-  $$SELECT public.check_auth_rate_limit('test_hash')$$,
-  '42501',
-  NULL,
-  'authenticated cannot call check_auth_rate_limit'
-);
-
--- ---------------------------------------------------------------------------
--- Test 6: authenticated cannot call cleanup_auth_rate_limits
--- ---------------------------------------------------------------------------
-SELECT throws_ok(
-  $$SELECT public.cleanup_auth_rate_limits()$$,
-  '42501',
-  NULL,
-  'authenticated cannot call cleanup_auth_rate_limits'
+SELECT function_privs_are(
+  'public', 'cleanup_auth_rate_limits', ARRAY['integer'],
+  'service_role', ARRAY['EXECUTE'],
+  'service_role can EXECUTE cleanup_auth_rate_limits'
 );
 
 -- Finish
