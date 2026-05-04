@@ -43,8 +43,8 @@ jobs:
 
       # Apply all migrations and seed data
       - name: Apply migrations (supabase db reset)
-        run: supabase db reset --no-verify-jwt
-        # db reset = drop + recreate + run all migrations + seed
+        run: supabase db reset --local
+        # db reset --local = drop + recreate local DB + run all migrations + seed
 
       # Run pgTAP RLS tests
       - name: Run pgTAP tests

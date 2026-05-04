@@ -38,7 +38,7 @@ jobs:
     env:
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
       NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
-      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_placeholder_for_ci_e2e
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-e2e-placeholder-no-real-key
       CRON_SECRET: placeholder-cron-secret-32-chars-minimum
       RATE_LIMIT_PEPPER: placeholder16chars
     steps:
