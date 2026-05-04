@@ -24,11 +24,11 @@ test.describe('Login page', () => {
     // Heading
     await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible()
 
-    // Email input
+    // Email input — react-hook-form validates via JS, not HTML required attr
     const emailInput = page.getByLabel(/email/i)
     await expect(emailInput).toBeVisible()
     await expect(emailInput).toHaveAttribute('type', 'email')
-    await expect(emailInput).toHaveAttribute('required', '')
+    await expect(emailInput).toHaveAttribute('autocomplete', 'email')
 
     // Submit button
     await expect(page.getByRole('button', { name: /send magic link/i })).toBeVisible()
@@ -37,18 +37,16 @@ test.describe('Login page', () => {
     await expect(page.getByText('Back to home')).toBeVisible()
   })
 
-  test('shows validation error for empty submit', async ({ page }) => {
+  test('shows client validation error for invalid email', async ({ page }) => {
     await page.goto('/auth/login')
 
-    // The HTML5 required attribute prevents empty submit,
-    // so we test by removing the required attribute and submitting
+    // react-hook-form validates on submit — type an invalid email then submit
     const emailInput = page.getByLabel(/email/i)
-    await emailInput.evaluate((el) => el.removeAttribute('required'))
-
+    await emailInput.fill('not-an-email')
     await page.getByRole('button', { name: /send magic link/i }).click()
 
-    // Wait for server action response — should show error
-    await expect(page.getByRole('alert')).toBeVisible({ timeout: 10_000 })
+    // RHF shows inline error via <FormMessage role="alert">
+    await expect(page.getByRole('alert')).toBeVisible({ timeout: 5_000 })
   })
 
   test('shows "check your email" confirmation after valid submit', async ({ page }) => {
