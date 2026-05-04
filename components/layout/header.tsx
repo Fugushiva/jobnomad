@@ -4,15 +4,15 @@
  * Header — site navigation header.
  *
  * Variants:
- *   public  — landing / auth pages: Sign in + Get started CTAs
- *   app     — authenticated feed/onboarding: user avatar + dropdown + sign out
+ *   public  -- landing / auth pages: Sign in + Get started CTAs
+ *   app     -- authenticated feed/onboarding: user avatar + dropdown + sign out
  *
  * Features:
  *   - Skip link for keyboard/screen-reader users (a11y)
  *   - Sticky top with backdrop blur
  *   - Mobile Sheet (hamburger) for viewports < md
- *   - Theme toggle (dark/light/system) via DropdownMenu
- *   - Keyboard navigable: Tab → all interactive elements
+ *   - Theme toggle (dark/light/system) -- loaded client-only to avoid hydration mismatch
+ *   - Keyboard navigable: Tab through all interactive elements
  *
  * @example
  *   <Header variant="public" />
@@ -20,9 +20,9 @@
  */
 
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { useState } from 'react'
-import { Menu, Sun, Moon, Monitor } from 'lucide-react'
-import { useTheme } from 'next-themes'
+import { Menu } from 'lucide-react'
 
 import { Logo } from '@/components/brand/logo'
 import { Button } from '@/components/ui/button'
@@ -37,6 +37,27 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
+
+/**
+ * ThemeToggle is loaded with ssr:false to prevent hydration mismatch.
+ *
+ * next-themes reads the theme from localStorage (client-only). On the server
+ * the theme is unknown, so any icon rendered SSR-side would mismatch the
+ * resolved client icon. By disabling SSR for this component React never
+ * attempts to reconcile the icon between server and client renders.
+ *
+ * The loading placeholder is a same-sized invisible button so the header
+ * layout does not shift when the toggle appears after hydration.
+ */
+const ThemeToggle = dynamic(
+  () => import('./theme-toggle').then((m) => m.ThemeToggle),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-9 w-9" aria-hidden="true" />
+    ),
+  }
+)
 
 type HeaderVariant = 'public' | 'app'
 
@@ -54,74 +75,6 @@ const NAV_LINKS_APP = [
   { href: '/feed', label: 'Feed' },
   { href: '/saved', label: 'Saved' },
 ]
-
-/**
- * ThemeToggle — theme switcher with hydration-safe icon rendering.
- *
- * next-themes resolves the theme client-side (localStorage/cookie).
- * On the server, `theme` is undefined — the icon defaults to Monitor.
- * On the client after hydration, it resolves to 'dark'/'light'/'system'.
- *
- * The <span suppressHydrationWarning> tells React to skip reconciling its
- * children's attributes during hydration. This is the correct pattern for
- * values that intentionally differ between SSR and client first-render.
- * React only suppresses one level deep — the span itself is stable.
- */
-function ThemeToggle() {
-  const { theme, setTheme } = useTheme()
-
-  const ThemeIcon =
-    theme === 'dark' ? Moon
-    : theme === 'light' ? Sun
-    : Monitor
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="Toggle theme"
-          className="text-text-muted hover:text-text"
-        >
-          {/*
-           * suppressHydrationWarning on this span: the icon className
-           * (lucide-moon vs lucide-monitor) differs between SSR and client.
-           * React skips hydration comparison for this element's children.
-           */}
-          <span suppressHydrationWarning>
-            <ThemeIcon className="h-4 w-4" aria-hidden />
-          </span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Theme</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => setTheme('light')}
-          className={cn(theme === 'light' && 'text-primary font-medium')}
-        >
-          <Sun className="mr-2 h-4 w-4" />
-          Light
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => setTheme('dark')}
-          className={cn(theme === 'dark' && 'text-primary font-medium')}
-        >
-          <Moon className="mr-2 h-4 w-4" />
-          Dark
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => setTheme('system')}
-          className={cn(theme === 'system' && 'text-primary font-medium')}
-        >
-          <Monitor className="mr-2 h-4 w-4" />
-          System
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
 
 function UserMenu({ email }: { email: string }) {
   const initials = email.slice(0, 2).toUpperCase()
@@ -168,7 +121,7 @@ export function Header({ variant = 'public', userEmail, className }: HeaderProps
 
   return (
     <>
-      {/* Skip link — accessible keyboard shortcut to main content */}
+      {/* Skip link -- accessible keyboard shortcut to main content */}
       <a href="#main" className="skip-link">
         Skip to main content
       </a>
