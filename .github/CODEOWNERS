@@ -1,0 +1,14 @@
+# CODEOWNERS — automatic review requests
+# Format: pattern  @github-username
+#
+# Every file in the repository requires a review from @Fugushiva.
+# This is a no-op for solo development but ensures correct defaults
+# when contributors are added.
+
+* @Fugushiva
+
+# Infrastructure & CI files require explicit owner sign-off
+.github/ @Fugushiva
+supabase/ @Fugushiva
+vercel.json @Fugushiva
+next.config.ts @Fugushiva

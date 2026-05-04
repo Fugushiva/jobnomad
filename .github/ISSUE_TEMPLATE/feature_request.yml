@@ -1,0 +1,47 @@
+name: Feature request
+description: Proposer une nouvelle fonctionnalité ou une amélioration
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Avant de soumettre, vérifier que la feature correspond au scope MVP (F-M01..F-M12 dans la spec).
+        Les features SHOULD/COULD/WON'T nécessitent une validation explicite.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Quel problème cette feature résout-elle ?
+      placeholder: "Je veux pouvoir faire X parce que Y..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solution proposée
+      placeholder: "Ajouter un bouton / une page / une API qui fait..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Priorité estimée
+      options:
+        - MUST (MVP bloquant)
+        - SHOULD (utile mais non bloquant)
+        - COULD (nice-to-have)
+        - WON'T (hors scope phase 1)
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considérées
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes supplémentaires (coûts, dépendances, risques)

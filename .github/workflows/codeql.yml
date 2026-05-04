@@ -1,0 +1,47 @@
+# =============================================================================
+# CodeQL — Static Application Security Testing (SAST)
+# =============================================================================
+# Scans JavaScript/TypeScript for security vulnerabilities.
+# Runs on PR, on push to master, and weekly on Sundays at 02:00 UTC.
+#
+# Results appear in the Security > Code Scanning tab of the repository.
+# Free for public repositories (GitHub Advanced Security).
+# =============================================================================
+
+name: CodeQL
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  schedule:
+    # Weekly scan: Sunday at 02:00 UTC
+    - cron: '0 2 * * 0'
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write   # Required to upload SARIF results to GitHub
+
+jobs:
+  analyze:
+    name: CodeQL analysis (javascript-typescript)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@53e96ec3b35fce51c141c0d6f0e31028a448722d # v3
+        with:
+          languages: javascript-typescript
+          # Use the default security-extended query suite (includes OWASP Top 10)
+          queries: security-extended
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@53e96ec3b35fce51c141c0d6f0e31028a448722d # v3
+        with:
+          category: /language:javascript-typescript

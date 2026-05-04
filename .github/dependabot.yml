@@ -1,0 +1,45 @@
+# Dependabot — automatic dependency update PRs
+# - npm packages: weekly on Monday mornings
+# - GitHub Actions: weekly (keeps action SHAs up to date)
+#
+# Grouped updates reduce PR noise: all non-major npm bumps in one PR.
+
+version: 2
+updates:
+  # npm dependencies
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Paris
+    groups:
+      # Bundle all patch/minor non-breaking bumps into a single PR
+      dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+    # Limit PR count to avoid noise
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    commit-message:
+      prefix: chore(deps)
+
+  # GitHub Actions — keep pinned SHAs current
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Paris
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: chore(ci)

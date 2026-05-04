@@ -1,0 +1,155 @@
+# =============================================================================
+# CI — Quality gates (lint · typecheck · unit tests · build · audit)
+# =============================================================================
+# Triggers: pull_request on any branch, push on master.
+# Concurrency: stale runs on the same PR/branch are cancelled automatically.
+#
+# Security model:
+#   - All third-party actions are pinned to a specific commit SHA.
+#   - Top-level permissions are read-only; individual jobs request write only
+#     when strictly necessary (e.g. codeql results upload).
+#   - Jobs that use secrets are gated on head.repo == base.repo to prevent
+#     fork-PR secret exfiltration.
+#   - The `build` job uses SAFE placeholder values for env vars so the Next.js
+#     build can run without requiring real secrets in CI logs.
+# =============================================================================
+
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+# Cancel stale runs on the same ref (saves Actions minutes)
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Minimum permissions — individual jobs add only what they need
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION_FILE: .nvmrc
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Lint — ESLint (eslint-config-next)
+  # ---------------------------------------------------------------------------
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: ${{ env.NODE_VERSION_FILE }}
+          cache: npm
+      - run: npm ci --prefer-offline
+      - run: npm run lint
+
+  # ---------------------------------------------------------------------------
+  # Type-check — tsc --noEmit
+  # ---------------------------------------------------------------------------
+  typecheck:
+    name: typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: ${{ env.NODE_VERSION_FILE }}
+          cache: npm
+      - run: npm ci --prefer-offline
+      - run: npm run typecheck
+
+  # ---------------------------------------------------------------------------
+  # Unit tests — Vitest (all tests are mocked, no DB required)
+  # ---------------------------------------------------------------------------
+  unit:
+    name: unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: ${{ env.NODE_VERSION_FILE }}
+          cache: npm
+      - run: npm ci --prefer-offline
+      - run: npm run test
+
+  # ---------------------------------------------------------------------------
+  # Build — next build with safe placeholder env vars
+  #
+  # Next.js needs NEXT_PUBLIC_* vars at build time (they are inlined in the
+  # bundle). We provide safe placeholder values here; the real values live in
+  # Vercel's environment and are injected at Vercel build time.
+  # SUPABASE_SERVICE_ROLE_KEY is intentionally NOT provided — it must never
+  # appear in CI logs. Server-only code must not reference it at build time.
+  # ---------------------------------------------------------------------------
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    # Only run with real secrets on branches that belong to this repo
+    # (prevents fork PRs from accessing secrets)
+    if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'push'
+    env:
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_placeholder_for_ci_build
+      # Stripe + AI keys — not needed at build time (server runtime only)
+      STRIPE_SECRET_KEY: sk_test_placeholder
+      STRIPE_WEBHOOK_SECRET: whsec_placeholder
+      RESEND_API_KEY: re_placeholder
+      GEMINI_API_KEY: placeholder
+      OPENAI_API_KEY: sk-placeholder
+      CRON_SECRET: placeholder-cron-secret-32-chars-minimum
+      RATE_LIMIT_PEPPER: placeholder16chars
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: ${{ env.NODE_VERSION_FILE }}
+          cache: npm
+      - run: npm ci --prefer-offline
+      # Cache the Next.js build output for speed on repeated runs
+      - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: .next/cache
+          key: next-build-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/*.ts', '**/*.tsx', '**/*.css') }}
+          restore-keys: |
+            next-build-${{ hashFiles('**/package-lock.json') }}-
+      - run: npm run build
+
+  # ---------------------------------------------------------------------------
+  # Dependency audit — npm audit (high+ severity, production deps only)
+  # ---------------------------------------------------------------------------
+  audit:
+    name: npm audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: ${{ env.NODE_VERSION_FILE }}
+          cache: npm
+      - run: npm ci --prefer-offline
+      # --omit=dev: only audit production dependencies
+      # --audit-level=high: fail only on high/critical CVEs
+      - run: npm audit --audit-level=high --omit=dev
+
+  # ---------------------------------------------------------------------------
+  # Workflow linting — validate workflow YAML files with actionlint
+  # ---------------------------------------------------------------------------
+  actionlint:
+    name: actionlint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: reviewdog/action-actionlint@be0761e4c1bab7cfdfca56cd03d4bb6253e39a4a # v1.72.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+          fail_level: any
