@@ -66,7 +66,8 @@ test.describe('Login page', () => {
 
   test('landing page Sign in link navigates to /auth/login', async ({ page }) => {
     await page.goto('/')
-    await page.getByRole('link', { name: 'Sign in' }).click()
+    // Header renders Sign in in both desktop and mobile nav — use first (desktop)
+    await page.getByRole('link', { name: 'Sign in' }).first().click()
     await expect(page).toHaveURL('/auth/login')
   })
 })
