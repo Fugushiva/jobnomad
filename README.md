@@ -150,6 +150,7 @@ jobnomad/
 │   ├── ui/                     # 20 shadcn/ui primitives (dont Toaster Sonner)
 │   ├── brand/                  # Logo, LogoMark
 │   ├── layout/                 # Header, Footer, ThemeToggle
+│   ├── auth/                   # SignedOutToast (toast post-logout)
 │   ├── jobs/                   # JobCard, ScoreBadge, RedFlagBadge
 │   ├── feed/                   # FeedSkeleton
 │   ├── states/                 # EmptyState, ErrorState
@@ -270,6 +271,47 @@ LIMIT 5;
 ```bash
 npx supabase gen types typescript --linked > src/lib/supabase/database.types.ts
 ```
+
+## Authentification
+
+JobNomad utilise **Supabase Auth** avec les magic links (email OTP). Pas de mots de passe.
+
+### Flux de connexion
+
+1. Utilisateur entre son email → `sendMagicLink()` Server Action (rate-limitée par IP).
+2. Supabase envoie le lien via Resend (SMTP configuré dans `docs/auth-setup.md`).
+3. Clic sur le lien → callback PKCE `/auth/callback` → session cookie → redirection vers `/feed`.
+
+### Flux de déconnexion
+
+1. Clic "Sign out" (Header desktop ou drawer mobile) → `signOut()` Server Action.
+2. `supabase.auth.signOut({ scope: 'local' })` appelé **côté serveur** :
+   - Invalide la session sur le serveur Supabase Auth.
+   - Supprime le cookie de session.
+   - Scope `local` : déconnecte uniquement le device courant, pas tous les appareils.
+3. Redirection vers `/?signed_out=1`.
+4. `<SignedOutToast>` affiche `toast.success("You have been signed out.")` et nettoie l'URL.
+
+### Fichiers clés Auth
+
+| Fichier | Rôle |
+|---|---|
+| `src/lib/auth/actions.ts` | `signOut()` Server Action — point d'entrée unique pour la déconnexion |
+| `src/lib/auth/get-user.ts` | `getUser()` — valide le JWT côté serveur (SSR-safe) |
+| `src/lib/auth/rate-limit.ts` | Rate limit connexion par IP hashée |
+| `src/lib/auth/origin.ts` | Résolution de l'origine PKCE (anti host-header injection) |
+| `app/auth/login/actions.ts` | `sendMagicLink()` Server Action |
+| `app/auth/callback/route.ts` | Échange du code PKCE → session cookie |
+| `app/(protected)/layout.tsx` | Guard auth : redirige vers `/auth/login` si pas de session |
+| `components/auth/signed-out-toast.tsx` | Toast de confirmation post-logout |
+
+### Sécurité Auth
+
+- **Logout via Server Action** (pas un lien GET) → CSRF-protégé nativement par Next.js 16.
+- Erreurs Supabase loggées côté serveur uniquement, jamais exposées au client.
+- Aucune route GET de déconnexion (l'ancienne `/auth/signout` a été supprimée).
+- Pas de PII (email, user ID) loggé dans les Server Actions.
+- `scope: 'local'` évite un logout involontaire cross-device.
 
 ## Notifications (toasts)
 
