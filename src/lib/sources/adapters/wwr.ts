@@ -39,17 +39,19 @@ const WWR_FEEDS = [
 // ---------------------------------------------------------------------------
 
 /**
- * WWR titles include the company: "AlphaTech Inc: Senior Backend Engineer"
- * When the <company> field is already available, we prefer it.
- * But for safety, we also try to parse the title string.
+ * WWR titles are always "Company: Job Title" format.
+ * Returns { company, title } split at the first colon.
+ * If no colon found (safety fallback), company is empty string.
  */
-function cleanTitle(rawTitle: string): string {
-  // Remove "Company: " prefix if it exists
+function parseWwrTitle(rawTitle: string): { company: string; title: string } {
   const colonIdx = rawTitle.indexOf(':')
-  if (colonIdx > 0 && colonIdx < 60) {
-    return rawTitle.slice(colonIdx + 1).trim()
+  if (colonIdx > 0 && colonIdx < 80) {
+    return {
+      company: rawTitle.slice(0, colonIdx).trim(),
+      title: rawTitle.slice(colonIdx + 1).trim(),
+    }
   }
-  return rawTitle.trim()
+  return { company: '', title: rawTitle.trim() }
 }
 
 // ---------------------------------------------------------------------------
@@ -117,11 +119,16 @@ export const wwrAdapter: SourceAdapter = {
         ctx.log('warn', 'wwr: some RSS items failed parsing', { feedUrl, failedItems })
       }
 
-      // Clean WWR-specific title format ("Company: Title")
-      const cleanedJobs: RawJob[] = rawJobs.map(job => ({
-        ...job,
-        title: cleanTitle(job.title),
-      }))
+      // WWR titles are "Company: Title" — split to get both fields
+      const cleanedJobs: RawJob[] = rawJobs.map(job => {
+        const { company, title } = parseWwrTitle(job.title)
+        return {
+          ...job,
+          title: title || job.title,
+          // Override company extracted from title (RSS items have no <company> field)
+          company: company || job.company,
+        }
+      })
 
       allJobs.push(...cleanedJobs)
       ctx.log('info', 'wwr: feed parsed', { feedUrl, count: cleanedJobs.length })

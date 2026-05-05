@@ -44,12 +44,14 @@ describe('parseRss() — WWR fixture (CDATA)', () => {
     expect(result.failedItems).toBe(1)
   })
 
-  it('extracts title correctly from CDATA', () => {
-    expect(result.jobs[0].title).toBe('Senior Backend Engineer at AlphaTech Inc')
+  it('extracts title correctly from CDATA (real WWR format: "Company: Title")', () => {
+    // Real WWR RSS has "Company: Title" in the <title> tag, no <company> field
+    expect(result.jobs[0].title).toBe('AlphaTech Inc: Senior Backend Engineer')
   })
 
-  it('extracts company correctly from CDATA', () => {
-    expect(result.jobs[0].company).toBe('AlphaTech Inc')
+  it('has empty company (WWR encodes it in title — adapter splits it)', () => {
+    // company is empty here; the wwr adapter post-processes to split title
+    expect(result.jobs[0].company).toBe('')
   })
 
   it('extracts HTTPS source_url', () => {
@@ -89,11 +91,25 @@ describe('parseRss() — Himalayas fixture (plain text)', () => {
     expect(result.failedItems).toBe(0)
   })
 
-  it('extracts job title (no CDATA)', () => {
-    expect(result.jobs[0].title).toBe('Senior Full-Stack Engineer at GammaCloud')
+  it('extracts job title from CDATA (no company suffix)', () => {
+    // Real Himalayas RSS: title is just the job title, company in himalayasJobs:companyName
+    expect(result.jobs[0].title).toBe('Senior Full-Stack Engineer')
   })
 
-  it('parses ISO 8601 pubDate', () => {
+  it('extracts company from himalayasJobs:companyName namespace', () => {
+    expect(result.jobs[0].company).toBe('GammaCloud')
+  })
+
+  it('extracts logo_url from media:content @_url attribute', () => {
+    expect(result.jobs[0].logo_url).toBe('https://cdn-images.himalayas.app/gammacloud-logo.jpg')
+  })
+
+  it('sets logo_url null when media:content absent', () => {
+    // Third item (EpsilonDesign) has no media:content
+    expect(result.jobs[2].logo_url).toBeNull()
+  })
+
+  it('parses RFC822 pubDate correctly', () => {
     const date = result.jobs[0].posted_at
     expect(date).not.toBeNull()
     expect(date?.getFullYear()).toBe(2026)
@@ -103,8 +119,9 @@ describe('parseRss() — Himalayas fixture (plain text)', () => {
     expect(result.jobs[0].source_url).toMatch(/^https:\/\/himalayas\.app/)
   })
 
-  it('sets source_id from guid', () => {
-    expect(result.jobs[0].source_id).toBe('himalayas-gammacloud-sfe-2026')
+  it('sets source_id from permaLink guid', () => {
+    // isPermaLink="true" guid → the URL itself is the source_id
+    expect(result.jobs[0].source_id).toMatch(/himalayas\.app/)
   })
 })
 
@@ -268,8 +285,12 @@ describe('extractItemJob()', () => {
     expect(extractItemJob({ title: 'Job', link: 'https://example.com', description: '', company: 'Corp' })).toBeNull()
   })
 
-  it('returns null when company is missing and no defaultCompany', () => {
-    expect(extractItemJob({ title: 'Job', link: 'https://example.com', description: 'desc' })).toBeNull()
+  it('returns a job with empty company when company is missing (adapter responsible for filling it)', () => {
+    // rss.ts allows empty company — some feeds (WWR) encode it in the title.
+    // The adapter post-processes and splits it. Zod validation in the adapter rejects empty company.
+    const job = extractItemJob({ title: 'Job', link: 'https://example.com', description: 'desc' })
+    expect(job).not.toBeNull()
+    expect(job?.company).toBe('')
   })
 
   it('returns a valid RawJob for complete data', () => {

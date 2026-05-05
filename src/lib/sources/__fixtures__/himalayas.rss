@@ -1,55 +1,42 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xmlns:himalayasJobs="https://himalayas.app/rss" version="2.0">
   <channel>
-    <title>Himalayas Remote Jobs</title>
+    <title><![CDATA[Remote jobs from Himalayas]]></title>
+    <description><![CDATA[Discover the best remote and work from home jobs on Himalayas.]]></description>
     <link>https://himalayas.app/jobs</link>
-    <description>Remote Jobs on Himalayas</description>
+    <generator>RSS for Node</generator>
+    <lastBuildDate>Tue, 05 May 2026 01:50:54 GMT</lastBuildDate>
+    <atom:link href="https://himalayas.app/jobs/rss" rel="self" type="application/rss+xml"/>
+    <pubDate>Tue, 05 May 2026 01:50:41 GMT</pubDate>
+    <ttl>1440</ttl>
     <item>
-      <title>Senior Full-Stack Engineer at GammaCloud</title>
+      <title><![CDATA[Senior Full-Stack Engineer]]></title>
+      <description><![CDATA[GammaCloud is a Series B startup building developer tooling. We are looking for a Senior Full-Stack Engineer. Stack: Node.js, React, TypeScript, PostgreSQL, AWS.]]></description>
       <link>https://himalayas.app/companies/gammacloud/jobs/senior-full-stack-engineer</link>
-      <guid>himalayas-gammacloud-sfe-2026</guid>
-      <pubDate>2026-05-01T09:00:00Z</pubDate>
-      <description>
-        GammaCloud is a Series B startup building developer tooling. We are looking for a Senior Full-Stack Engineer.
-
-        Stack: Node.js, React, TypeScript, PostgreSQL, AWS.
-
-        You will be working with a small team of 12 engineers spread across Americas and Asia Pacific.
-        We are truly async-first: no timezone requirements whatsoever.
-
-        Salary: $130,000 - $170,000 USD/year + equity.
-        Contractors and employees both welcome. We work with PEO.
-      </description>
-      <company>GammaCloud</company>
+      <guid isPermaLink="true">https://himalayas.app/companies/gammacloud/jobs/senior-full-stack-engineer</guid>
+      <category><![CDATA[Full-Stack]]></category>
+      <pubDate>Thu, 01 May 2026 09:00:00 GMT</pubDate>
+      <media:content url="https://cdn-images.himalayas.app/gammacloud-logo.jpg" medium="image">
+      </media:content>
+      <himalayasJobs:companyName>GammaCloud</himalayasJobs:companyName>
+      <himalayasJobs:companyLogo>https://cdn-images.himalayas.app/gammacloud-logo.jpg</himalayasJobs:companyLogo>
     </item>
     <item>
-      <title>DevOps Engineer at DeltaOps</title>
+      <title><![CDATA[DevOps Engineer]]></title>
+      <description><![CDATA[DeltaOps needs a DevOps Engineer with AWS and Terraform experience. Must be located in the United States or Canada.]]></description>
       <link>https://himalayas.app/companies/deltaops/jobs/devops-engineer</link>
-      <guid>himalayas-deltaops-devops-2026</guid>
-      <pubDate>2026-04-28T12:00:00Z</pubDate>
-      <description>
-        DeltaOps needs a DevOps Engineer with AWS and Terraform experience.
-
-        Must be located in the United States or Canada. Valid work authorization required.
-
-        Salary: $110,000 USD/year.
-      </description>
-      <company>DeltaOps</company>
+      <guid isPermaLink="true">https://himalayas.app/companies/deltaops/jobs/devops-engineer</guid>
+      <pubDate>Mon, 28 Apr 2026 12:00:00 GMT</pubDate>
+      <media:content url="https://cdn-images.himalayas.app/deltaops-logo.jpg" medium="image">
+      </media:content>
+      <himalayasJobs:companyName>DeltaOps</himalayasJobs:companyName>
     </item>
     <item>
-      <title>Product Designer at EpsilonDesign</title>
+      <title><![CDATA[Product Designer]]></title>
+      <description><![CDATA[EpsilonDesign is looking for an experienced Product Designer (5+ years). Location: Worldwide. Async-first.]]></description>
       <link>https://himalayas.app/companies/epsilondesign/jobs/product-designer</link>
-      <guid>himalayas-epsilon-designer-2026</guid>
-      <pubDate>2026-04-25T15:30:00Z</pubDate>
-      <description>
-        EpsilonDesign is looking for an experienced Product Designer (5+ years).
-
-        Location: Worldwide. Async-first.
-
-        Figma, user research, design systems experience required.
-        Salary range: $90,000 - $120,000.
-      </description>
-      <company>EpsilonDesign</company>
+      <guid isPermaLink="true">https://himalayas.app/companies/epsilondesign/jobs/product-designer</guid>
+      <pubDate>Fri, 25 Apr 2026 15:30:00 GMT</pubDate>
+      <himalayasJobs:companyName>EpsilonDesign</himalayasJobs:companyName>
     </item>
   </channel>
 </rss>

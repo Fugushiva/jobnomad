@@ -115,11 +115,18 @@ export function extractItemJob(item: Record<string, unknown>, defaultCompany?: s
   const description = asString(item['description'] ?? item['content:encoded'] ?? item['content']).trim()
   if (!description) return null
 
-  // Company: job boards use different fields
+  // Company: job boards use different fields.
+  // Some feeds (e.g. WWR) encode company in the title ("Company: Title") —
+  // the adapter is responsible for extracting it post-parse.
+  // We allow empty company here and let the adapter/validator decide.
   const company = asString(
-    item['company'] ?? item['dc:creator'] ?? item['author'] ?? defaultCompany ?? ''
+    item['company'] ??
+    item['himalayasJobs:companyName'] ??
+    item['dc:creator'] ??
+    item['author'] ??
+    defaultCompany ??
+    ''
   ).trim()
-  if (!company) return null
 
   // GUID / source_id (optional)
   const guidRaw = item['guid']
@@ -131,7 +138,12 @@ export function extractItemJob(item: Record<string, unknown>, defaultCompany?: s
   const posted_at = parseDate(item['pubDate'] ?? item['published'] ?? item['dc:date'])
 
   // Logo (optional — rarely present in RSS)
-  const logoRaw = asString(item['media:thumbnail'] ?? item['enclosure'] ?? '')
+  // Himalayas uses <media:content url="..."> as an object: { '@_url': '...', '@_medium': 'image' }
+  const mediaContent = item['media:content']
+  const mediaContentUrl = mediaContent && typeof mediaContent === 'object'
+    ? asString((mediaContent as Record<string, unknown>)['@_url'] ?? '')
+    : ''
+  const logoRaw = asString(item['media:thumbnail'] ?? item['enclosure'] ?? '') || mediaContentUrl
   const logo_url = isHttpsUrl(logoRaw) ? logoRaw : null
 
   return {

@@ -55,13 +55,14 @@ describe('himalayasAdapter', () => {
     expect(result.notModified).toBe(false)
   })
 
-  it('extracts correct title from plain text RSS', async () => {
+  it('extracts correct title and company from real Himalayas RSS format', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(
       new Response(himalayasRss, { status: 200 })
     ))
 
     const result = await himalayasAdapter.fetch(makeCtx())
-    expect(result.jobs[0].title).toBe('Senior Full-Stack Engineer at GammaCloud')
+    expect(result.jobs[0].title).toBe('Senior Full-Stack Engineer')
+    expect(result.jobs[0].company).toBe('GammaCloud')
   })
 
   it('captures etag from response', async () => {

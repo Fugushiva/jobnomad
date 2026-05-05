@@ -60,7 +60,8 @@ describe('wwrAdapter', () => {
     expect(result.notModified).toBe(false)
   })
 
-  it('cleans "Company: Title" format from WWR titles', async () => {
+  it('splits "Company: Title" format — real WWR prod format (no <company> tag)', async () => {
+    // Real WWR RSS: company embedded in title, no separate <company> element
     const wwrTitleRss = `<?xml version="1.0"?>
 <rss version="2.0">
   <channel>
@@ -68,19 +69,17 @@ describe('wwrAdapter', () => {
       <title><![CDATA[AlphaTech: Senior Backend Engineer]]></title>
       <link>https://weworkremotely.com/remote-jobs/alphatech-backend</link>
       <description><![CDATA[Great backend role at AlphaTech]]></description>
-      <company><![CDATA[AlphaTech]]></company>
     </item>
   </channel>
 </rss>`
-    // Create a fresh Response for each call (body can only be consumed once)
     vi.stubGlobal('fetch', vi.fn().mockImplementation(() =>
       Promise.resolve(new Response(wwrTitleRss, { status: 200 }))
     ))
 
     const result = await wwrAdapter.fetch(makeCtx())
-    expect(result.jobs.length).toBeGreaterThanOrEqual(1)
-    // Title should have "AlphaTech: " prefix removed
+    expect(result.jobs).toHaveLength(1)
     expect(result.jobs[0].title).toBe('Senior Backend Engineer')
+    expect(result.jobs[0].company).toBe('AlphaTech')
   })
 
   it('returns notModified=true if first feed returns 304', async () => {
