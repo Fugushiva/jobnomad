@@ -152,4 +152,89 @@ describe('sendMagicLink', () => {
       expect.objectContaining({ email: 'alice@gmail.com' }),
     )
   })
+
+  // ---------------------------------------------------------------------------
+  // PKCE origin handling -- prevents the "exchange_failed" bug on Vercel previews
+  // ---------------------------------------------------------------------------
+
+  it('uses request origin for emailRedirectTo when on Vercel preview deployment', async () => {
+    const { headers } = await import('next/headers')
+    vi.mocked(headers).mockResolvedValueOnce(
+      new Headers({
+        'x-forwarded-for': '1.2.3.4',
+        'x-forwarded-host': 'jobnomad-abc123-org.vercel.app',
+        'x-forwarded-proto': 'https',
+        host: 'jobnomad-abc123-org.vercel.app',
+      }),
+    )
+
+    await sendMagicLink(null, makeFormData('user@example.com'))
+
+    expect(mockSignInWithOtp).toHaveBeenCalledWith(
+      expect.objectContaining({
+        options: expect.objectContaining({
+          emailRedirectTo: 'https://jobnomad-abc123-org.vercel.app/auth/callback',
+        }),
+      }),
+    )
+  })
+
+  it('uses NEXT_PUBLIC_SITE_URL as fallback when host header is absent', async () => {
+    const { headers } = await import('next/headers')
+    vi.mocked(headers).mockResolvedValueOnce(
+      new Headers({ 'x-forwarded-for': '1.2.3.4' }), // no host
+    )
+
+    await sendMagicLink(null, makeFormData('user@example.com'))
+
+    expect(mockSignInWithOtp).toHaveBeenCalledWith(
+      expect.objectContaining({
+        options: expect.objectContaining({
+          emailRedirectTo: 'http://localhost:3000/auth/callback',
+        }),
+      }),
+    )
+  })
+
+  it('falls back to NEXT_PUBLIC_SITE_URL when host is not in allowlist (anti host-header injection)', async () => {
+    const { headers } = await import('next/headers')
+    vi.mocked(headers).mockResolvedValueOnce(
+      new Headers({
+        'x-forwarded-for': '1.2.3.4',
+        'x-forwarded-host': 'attacker.com',
+        host: 'attacker.com',
+      }),
+    )
+
+    await sendMagicLink(null, makeFormData('user@example.com'))
+
+    // Must NOT redirect to attacker.com -- falls back to safe NEXT_PUBLIC_SITE_URL
+    expect(mockSignInWithOtp).toHaveBeenCalledWith(
+      expect.objectContaining({
+        options: expect.objectContaining({
+          emailRedirectTo: 'http://localhost:3000/auth/callback',
+        }),
+      }),
+    )
+  })
+
+  it('uses http for localhost dev', async () => {
+    const { headers } = await import('next/headers')
+    vi.mocked(headers).mockResolvedValueOnce(
+      new Headers({
+        'x-forwarded-for': '127.0.0.1',
+        host: 'localhost:3000',
+      }),
+    )
+
+    await sendMagicLink(null, makeFormData('user@example.com'))
+
+    expect(mockSignInWithOtp).toHaveBeenCalledWith(
+      expect.objectContaining({
+        options: expect.objectContaining({
+          emailRedirectTo: 'http://localhost:3000/auth/callback',
+        }),
+      }),
+    )
+  })
 })

@@ -10,8 +10,8 @@
 import { headers } from 'next/headers'
 import { loginFormSchema } from '@/src/lib/auth/schemas'
 import { checkRateLimit, extractClientIp } from '@/src/lib/auth/rate-limit'
+import { resolveAuthCallbackUrl } from '@/src/lib/auth/origin'
 import { createClient } from '@/src/lib/supabase/server'
-import { env } from '@/src/lib/env'
 
 // ---------------------------------------------------------------------------
 // Response types
@@ -59,12 +59,18 @@ export async function sendMagicLink(
   try {
     const supabase = await createClient()
 
+    // PKCE requires the magic link click to land back on the SAME origin where
+    // the request was initiated (so the code_verifier cookie is readable).
+    // Resolve from request headers (validated against allowlist), not from
+    // env.NEXT_PUBLIC_SITE_URL -- otherwise Vercel preview deployments break.
+    const emailRedirectTo = resolveAuthCallbackUrl(reqHeaders)
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
         // The callback URL where Supabase redirects after clicking the link.
         // PKCE: Supabase appends ?code=... to this URL automatically.
-        emailRedirectTo: `${env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+        emailRedirectTo,
         shouldCreateUser: true,
       },
     })

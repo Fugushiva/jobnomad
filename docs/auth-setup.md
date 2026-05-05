@@ -271,8 +271,17 @@ openssl rand -hex 16
 1. **Site URL**: `https://jobnomad.app`
 2. **Redirect URLs** (click "Add URL" for each):
    - `https://jobnomad.app/auth/callback`
-   - `https://jobnomad-*.vercel.app/auth/callback` (preview deployments)
+   - `https://jobnomad-*.vercel.app/auth/callback` (preview deployments -- wildcard)
+   - `https://jobnomad-*-jeromedelodderdev-5718s-projects.vercel.app/auth/callback` (Vercel team-scoped previews)
    - `http://localhost:3000/auth/callback` (local dev)
+
+> **CRITICAL for PKCE flow**: The magic link click must redirect to the SAME origin
+> where the form was submitted, otherwise the code_verifier cookie is missing and
+> the exchange fails with `?reason=exchange_failed`. The application code uses
+> `resolveAuthCallbackUrl()` (in `src/lib/auth/origin.ts`) to derive the redirect
+> from the request headers (with host-header injection protection), so the
+> redirect always matches the user's actual origin. But Supabase still requires
+> EVERY allowed origin to be in the Redirect URLs allowlist above.
 
 ### Authentication -> Providers -> Email
 
@@ -531,6 +540,26 @@ If links expire immediately: check `mailer_otp_exp` via `npm run smtp:verify` --
 
 Usually means the URL was modified (email client rewrote the link).
 - Check Supabase Dashboard -> Auth -> URL Configuration for correct callback URL.
+
+### `?reason=exchange_failed` after clicking the magic link
+
+This happens when the magic link redirects to a domain DIFFERENT from where
+the form was submitted. The PKCE code_verifier cookie is bound to the original
+domain -- if the redirect lands elsewhere, the code exchange fails.
+
+**Common cause**: `emailRedirectTo` was hardcoded to `NEXT_PUBLIC_SITE_URL`
+(production domain) but the form was submitted on a Vercel preview URL.
+
+**Fix**:
+1. The application code uses `resolveAuthCallbackUrl()` from
+   `src/lib/auth/origin.ts` to derive the redirect from the actual request
+   origin, with host-header injection protection. Verify this is in use in
+   `app/auth/login/actions.ts`.
+2. Ensure the preview/production URL is in the Supabase Redirect URLs allowlist
+   (Authentication -> URL Configuration). Wildcards are supported:
+   `https://jobnomad-*.vercel.app/auth/callback`.
+3. Test by submitting the form and clicking the link -- the URL in the link
+   should match the URL where you submitted the form.
 
 ### Rate limited in dev
 
