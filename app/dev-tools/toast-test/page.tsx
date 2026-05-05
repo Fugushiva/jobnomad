@@ -1,8 +1,12 @@
 /**
- * /__dev__/toast-test — Developer-only toast testing page.
+ * /dev-tools/toast-test — Developer-only toast testing page.
  *
  * SECURITY: This page is ONLY available in development and test environments.
  * In production (NODE_ENV === 'production'), it returns a 404 via notFound().
+ *
+ * Note: the folder is named 'dev-tools' (no leading underscore) because
+ * Next.js App Router excludes folders prefixed with '_' from routing entirely.
+ * The production guard is enforced at runtime via notFound().
  *
  * Purpose: Provides trigger buttons for all toast types so that:
  *   1. Developers can manually verify toast UI during local development.

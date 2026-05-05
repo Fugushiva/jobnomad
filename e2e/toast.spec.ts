@@ -2,7 +2,7 @@
  * E2E — Toast system (Sonner)
  *
  * Tests the end-to-end toast behaviour using the dev-only
- * /__dev__/toast-test page which exposes trigger buttons for each toast type.
+ * /dev-tools/toast-test page which exposes trigger buttons for each toast type.
  *
  * What is tested:
  *   - Success toast appears with the correct text.
@@ -20,7 +20,7 @@
 
 import { test, expect } from '@playwright/test'
 
-const DEV_PAGE = '/__dev__/toast-test'
+const DEV_PAGE = '/dev-tools/toast-test'
 
 // Sonner attaches data attributes to its DOM elements.
 const TOASTER = '[data-sonner-toaster]'
@@ -94,18 +94,19 @@ test.describe('Toast system — Sonner integration', () => {
   // ── ARIA / Accessibility ────────────────────────────────────────────────────
 
   test('toaster container is in the DOM with Sonner data attribute', async ({ page }) => {
-    // The toaster is mounted globally in the layout, so it is present before
-    // any toast is triggered — it is just empty.
+    // Trigger a toast first — Sonner renders the <ol> container lazily on first toast.
+    await page.getByTestId('trigger-success').click()
     const toaster = page.locator(TOASTER)
-    await expect(toaster).toBeAttached()
+    // data-sonner-toaster is a boolean attribute rendered as "true".
+    await expect(toaster).toHaveAttribute('data-sonner-toaster', 'true', { timeout: 3_000 })
   })
 
-  test('triggered toast has role="status" for non-critical notifications', async ({ page }) => {
-    await page.getByTestId('trigger-success').click()
-    const toast = page.locator(TOAST).first()
-    await expect(toast).toBeVisible({ timeout: 3_000 })
-    // Sonner gives non-error toasts role="status" (polite live region).
-    await expect(toast).toHaveAttribute('role', 'status')
+  test('Sonner renders an aria-live region for screen readers', async ({ page }) => {
+    // Sonner renders a dedicated <section aria-live="polite"> screen reader region
+    // separate from the visual toaster <ol>. This ensures toasts are announced
+    // to assistive technologies without depending on the visual container.
+    const ariaLiveRegion = page.locator('[aria-live="polite"]')
+    await expect(ariaLiveRegion.first()).toBeAttached()
   })
 
   // ── Responsive position ─────────────────────────────────────────────────────
@@ -116,12 +117,12 @@ test.describe('Toast system — Sonner integration', () => {
     await expect(page.getByTestId('trigger-success')).toBeVisible()
 
     await page.getByTestId('trigger-success').click()
-    const toast = page.locator(TOAST).first()
-    await expect(toast).toBeVisible({ timeout: 3_000 })
+    await expect(page.locator(TOAST).first()).toBeVisible({ timeout: 3_000 })
 
-    // The toaster container carries a data-position attribute set by Sonner.
+    // Sonner splits position into data-x-position and data-y-position attributes.
     const toaster = page.locator(TOASTER)
-    await expect(toaster).toHaveAttribute('data-position', 'top-right')
+    await expect(toaster).toHaveAttribute('data-y-position', 'top')
+    await expect(toaster).toHaveAttribute('data-x-position', 'right')
   })
 
   test('toaster is positioned top-center on mobile (< 768px)', async ({ page }) => {
@@ -130,11 +131,11 @@ test.describe('Toast system — Sonner integration', () => {
     await expect(page.getByTestId('trigger-success')).toBeVisible()
 
     await page.getByTestId('trigger-success').click()
-    const toast = page.locator(TOAST).first()
-    await expect(toast).toBeVisible({ timeout: 3_000 })
+    await expect(page.locator(TOAST).first()).toBeVisible({ timeout: 3_000 })
 
     const toaster = page.locator(TOASTER)
-    await expect(toaster).toHaveAttribute('data-position', 'top-center')
+    await expect(toaster).toHaveAttribute('data-y-position', 'top')
+    await expect(toaster).toHaveAttribute('data-x-position', 'center')
   })
 
   // ── Multiple toasts ─────────────────────────────────────────────────────────
