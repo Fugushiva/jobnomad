@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Newsreader, DM_Sans, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 /**
@@ -62,6 +63,8 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          {/* Global toast provider — single instance, do NOT add another Toaster in sub-layouts */}
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>
