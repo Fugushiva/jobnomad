@@ -1,25 +1,58 @@
 # Gitleaks configuration
 #
-# Allowlist for historical CI placeholder values that gitleaks misidentifies
-# as secrets. These are NOT real secrets — they are dummy strings that were
-# intentionally used in GitHub Actions workflow files so Next.js could build
-# without real environment variables.
+# Allowlist for CI placeholder values that gitleaks misidentifies as secrets.
+# These are NOT real secrets -- they are dummy strings intentionally used in
+# GitHub Actions workflow files so Next.js can build without real env vars.
 #
-# We use fingerprint-level allowlisting (commit:file:ruleId:line) which is
-# surgical — only these exact occurrences are exempted. Any new real secret
-# committed in a future commit will still be caught.
+# We use TWO complementary strategies:
+#
+# 1. Regex-based path/value allowlisting: for placeholder values in CI workflows.
+#    Matches any workflow file containing known safe placeholder patterns.
+#
+# 2. Fingerprint-level allowlisting: for specific historical commits that
+#    gitleaks cannot retroactively ignore with regex rules alone.
+#
+# IMPORTANT: Any new REAL secret committed accidentally will still be caught.
+# These rules only allow patterns that are provably safe (contain "placeholder",
+# "ci-build", etc.) or are scoped to non-secret file paths.
 
 [allowlist]
-description = "CI workflow placeholder values — not real secrets"
+description = "CI workflow placeholder values -- not real secrets"
 
-# Fingerprints are in the format: commit:file:ruleId:line
+# ---------------------------------------------------------------------------
+# Path + value based rules (preferred -- works for future commits too)
+# ---------------------------------------------------------------------------
+
+# Rule: Regex-match placeholder values in GitHub Actions workflow files.
+# These values contain "placeholder", "ci-build", or "no-real-key" strings
+# which make them unambiguously safe dummy values.
+[[allowlist.commits]]
+description = "ci workflow placeholder values anywhere"
+regexes = [
+  # Generic CI placeholders
+  "ci-.*placeholder.*",
+  "placeholder.*no-real-key",
+  ".*-placeholder-.*",
+  # Known safe placeholder prefixes in CI build env
+  "re_ci_placeholder",
+  "ci-build@placeholder",
+  "sk-placeholder",
+  # Supabase URL placeholder
+  "placeholder\\.supabase\\.co",
+]
+paths = [
+  ".github/workflows/.*\\.yml",
+]
+
+# ---------------------------------------------------------------------------
+# Fingerprint allowlist (surgical -- only specific historical commits/lines)
+# ---------------------------------------------------------------------------
+
 # Source: commit bbf840de (initial .github/workflows/ creation)
-#
 # Finding 1: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = sb_publishable_placeholder_for_ci_e2e
-#   in .github/workflows/e2e.yml:41 — gitleaks rule: generic-api-key
+#   in .github/workflows/e2e.yml:41 -- gitleaks rule: generic-api-key
 # Finding 2: STRIPE_SECRET_KEY = sk_test_placeholder
-#   in .github/workflows/ci.yml:103 — gitleaks rule: stripe-access-token
-#
+#   in .github/workflows/ci.yml:103 -- gitleaks rule: stripe-access-token
 # Both were fixed in commit ba7c44b (renamed to ci-*-placeholder-no-real-key)
 # but gitleaks scans the full PR commit range including historical commits.
 fingerprints = [
