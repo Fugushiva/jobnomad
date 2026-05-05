@@ -1,0 +1,119 @@
+# =============================================================================
+# SMTP Health Check -- Smoke test for Resend + Supabase Auth integration
+# =============================================================================
+# Triggers:
+#   - Manual: workflow_dispatch (run from GitHub Actions UI at any time)
+#   - Scheduled: nightly at 06:00 UTC (low-traffic, before business hours Asia)
+#
+# What it does:
+#   1. Spins up a Next.js dev server (uses .env from Vercel secrets)
+#   2. Runs e2e/auth-smtp-health.spec.ts with SMTP_HEALTH_TEST=1
+#   3. Verifies the magic link form -> Supabase -> Resend SMTP pipeline is alive
+#
+# Secrets required (add in GitHub > Settings > Secrets > Actions):
+#   SMTP_HEALTH_EMAIL               Email to receive the test magic link
+#   NEXT_PUBLIC_SUPABASE_URL        Your Supabase project URL (public)
+#   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY  Supabase anon/publishable key (public)
+#   SUPABASE_SERVICE_ROLE_KEY       For Admin API verification (sensitive)
+#   RESEND_API_KEY                  For Resend delivery verification (sensitive)
+#   EMAIL_FROM_ADDRESS              Sender address (auth@jobnomad.app)
+#   EMAIL_FROM_NAME                 Sender name (JobNomad)
+#
+# Security:
+#   - Only runs on the base repo (not forks) -- all secrets gated on this.
+#   - SERVICE_ROLE_KEY and RESEND_API_KEY are marked sensitive in Vercel;
+#     they must also be added as GitHub secrets.
+#   - Test email is a controlled address -- no PII risk.
+#   - Results are continue-on-error:true -- SMTP issue won't break deploys,
+#     but you'll get a workflow failure notification.
+# =============================================================================
+
+name: SMTP Health Check
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: 'Base URL to test against (default: http://localhost:3000)'
+        required: false
+        default: 'http://localhost:3000'
+
+  schedule:
+    # Nightly at 06:00 UTC (after EU midnight, before Asia business hours)
+    - cron: '0 6 * * *'
+
+# Only run on the base repo to protect secrets
+# (forks don't have access to the required secrets)
+permissions:
+  contents: read
+
+jobs:
+  smtp-health:
+    name: SMTP health smoke test
+    runs-on: ubuntu-latest
+
+    # Gate: only run on the base repo (prevents fork PRs from accessing secrets)
+    if: github.repository == 'Fugushiva/jobnomad'
+
+    env:
+      NODE_VERSION_FILE: .nvmrc
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: ${{ env.NODE_VERSION_FILE }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline
+
+      - name: Install Playwright browsers (Chromium only)
+        run: npx playwright install chromium --with-deps
+
+      - name: Build Next.js app
+        env:
+          NEXT_PUBLIC_SITE_URL: ${{ github.event.inputs.target_url || 'http://localhost:3000' }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EMAIL_FROM_ADDRESS: ${{ secrets.EMAIL_FROM_ADDRESS }}
+          EMAIL_FROM_NAME: ${{ secrets.EMAIL_FROM_NAME }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          RATE_LIMIT_PEPPER: ${{ secrets.RATE_LIMIT_PEPPER }}
+        run: npm run build
+
+      - name: Run SMTP health smoke test
+        env:
+          # Enable the opt-in smoke test
+          SMTP_HEALTH_TEST: '1'
+          # Test configuration
+          SMTP_HEALTH_EMAIL: ${{ secrets.SMTP_HEALTH_EMAIL }}
+          BASE_URL: ${{ github.event.inputs.target_url || 'http://localhost:3000' }}
+          # Supabase
+          NEXT_PUBLIC_SITE_URL: ${{ github.event.inputs.target_url || 'http://localhost:3000' }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          # Resend
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EMAIL_FROM_ADDRESS: ${{ secrets.EMAIL_FROM_ADDRESS }}
+          EMAIL_FROM_NAME: ${{ secrets.EMAIL_FROM_NAME }}
+          # Other required vars
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          RATE_LIMIT_PEPPER: ${{ secrets.RATE_LIMIT_PEPPER }}
+        # continue-on-error: SMTP issues are important but should not block production
+        # They generate a workflow_failure notification via GitHub's notification system
+        continue-on-error: false
+        run: npx playwright test e2e/auth-smtp-health.spec.ts --project=chromium
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v4.5.0
+        with:
+          name: smtp-health-report-${{ github.run_id }}
+          path: playwright-report/
+          retention-days: 7
