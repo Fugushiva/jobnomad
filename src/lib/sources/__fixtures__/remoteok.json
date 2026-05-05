@@ -1,0 +1,65 @@
+[
+  {
+    "legal": "This data is provided for informational purposes. Do not scrape this endpoint.",
+    "apiVersion": "1"
+  },
+  {
+    "id": "job-180001",
+    "slug": "remote-senior-backend-engineer-alphatech",
+    "position": "Senior Backend Engineer",
+    "company": "AlphaTech Inc",
+    "company_num_employees": "11-50",
+    "employment_type": "Full-Time",
+    "location": "Worldwide",
+    "geo": "Worldwide",
+    "description": "<p><strong>About AlphaTech Inc</strong></p><p>We build developer tools for the modern era. Our stack is Go, PostgreSQL, Kubernetes, and Redis.</p><p><strong>About the role</strong></p><p>You will design and implement backend services at scale. 5+ years backend experience required. Timezone: flexible.</p><p>Salary: $120,000 - $160,000 USD/year.</p>",
+    "tags": ["go", "postgresql", "kubernetes", "backend"],
+    "logo": "https://remoteok.com/assets/jobs/alphatech-logo.png",
+    "url": "https://remoteok.com/remote-jobs/job-180001",
+    "apply_url": "https://alphatech.example.com/apply/senior-backend",
+    "company_logo": "https://remoteok.com/assets/jobs/alphatech-logo.png",
+    "date": "1746057600",
+    "salary_min": 120000,
+    "salary_max": 160000,
+    "salary_currency": "USD",
+    "original": true
+  },
+  {
+    "id": "job-180002",
+    "slug": "remote-react-developer-betasoft",
+    "position": "React Frontend Developer",
+    "company": "BetaSoft",
+    "employment_type": "Full-Time",
+    "location": "Europe / APAC",
+    "description": "<p>BetaSoft is hiring a React Frontend Developer with 3+ years React experience and TypeScript expertise.</p><p>Must have 4h overlap with CET (UTC+1). Compensation: €60,000 - €80,000/year.</p>",
+    "tags": ["react", "typescript", "frontend"],
+    "logo": "/assets/jobs/betasoft-logo.png",
+    "url": "https://remoteok.com/remote-jobs/job-180002",
+    "date": "1745971200",
+    "salary_min": 60000,
+    "salary_max": 80000,
+    "salary_currency": "EUR"
+  },
+  {
+    "id": "job-180003",
+    "slug": "remote-devops-engineer-gammacloud",
+    "position": "DevOps Engineer",
+    "company": "GammaCloud",
+    "employment_type": "Contract",
+    "location": "USA only",
+    "description": "<p>GammaCloud needs a DevOps Engineer with AWS and Terraform. Must be located in the US.</p>",
+    "tags": ["aws", "terraform", "devops"],
+    "url": "https://remoteok.com/remote-jobs/job-180003",
+    "date": "1745884800",
+    "salary_min": 0,
+    "salary_max": 0
+  },
+  {
+    "id": "job-180004",
+    "position": "",
+    "company": "GhostCo",
+    "description": "This job has no title — should be skipped",
+    "url": "https://remoteok.com/remote-jobs/job-180004",
+    "date": "1745884800"
+  }
+]
