@@ -139,3 +139,55 @@ test.describe('Auth callback without code', () => {
     await expect(page).toHaveURL(/\/auth\/error\?reason=missing_code/)
   })
 })
+
+test.describe('Logout flow', () => {
+  /**
+   * These E2E tests verify the logout UI and its security properties without
+   * requiring a real authenticated session (which would need Supabase admin
+   * API access). For the full login → logout → redirect flow, see
+   * docs/auth-setup.md (manual testing runbook).
+   *
+   * What we CAN verify without a session:
+   *  1. The public landing page does NOT expose a logout button (auth-conditional rendering).
+   *  2. The /feed route (protected) redirects unauthenticated users to /auth/login.
+   *  3. The old /auth/signout GET route no longer exists (replaced by Server Action).
+   *  4. The landing page is accessible with no ?signed_out flag (no ghost toast).
+   */
+
+  test('landing page does not show Sign out button for unauthenticated visitors', async ({ page }) => {
+    await page.goto('/')
+    // The header must be in public variant — no UserMenu, no Sign out
+    const signOutButtons = page.getByRole('button', { name: /sign out/i })
+    await expect(signOutButtons).toHaveCount(0)
+  })
+
+  test('/feed still redirects unauthenticated users after signout route removal', async ({ page }) => {
+    // Regression guard: removing the old route handler must not break the
+    // auth guard. Protected routes must still redirect to /auth/login.
+    await page.goto('/feed')
+    await expect(page).toHaveURL(/\/auth\/login/)
+  })
+
+  test('old GET /auth/signout route returns 404 (replaced by Server Action)', async ({ page }) => {
+    // A GET-based sign-out URL is a security vulnerability (CSRF via link
+    // prefetch). The route was removed and replaced with a Server Action.
+    // Verifying it no longer responds prevents accidental re-introduction.
+    const response = await page.goto('/auth/signout')
+    expect(response?.status()).toBe(404)
+  })
+
+  test('landing page with ?signed_out=1 renders without error', async ({ page }) => {
+    // The toast component reads this query param. Verify the page doesn't crash.
+    await page.goto('/?signed_out=1')
+    await expect(page).toHaveURL('/?signed_out=1')
+    // The page body should render normally (no error page, no 500)
+    await expect(page.getByRole('main')).toBeVisible()
+  })
+
+  test('Sign in link still works from landing after logout param is present', async ({ page }) => {
+    await page.goto('/?signed_out=1')
+    const signInLinks = page.getByRole('link', { name: 'Sign in' })
+    await expect(signInLinks.first()).toBeVisible()
+    await expect(signInLinks.first()).toHaveAttribute('href', '/auth/login')
+  })
+})
