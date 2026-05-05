@@ -61,48 +61,49 @@ Ouvre [http://localhost:3000](http://localhost:3000).
 
 ## Variables d'environnement
 
-Crée un fichier `.env.local` à la racine (copier depuis `.env.example`) :
-
-```env
-# Supabase — Project Settings > API
-NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
-
-# Supabase — Project Settings > API > service_role (serveur uniquement)
-SUPABASE_SERVICE_ROLE_KEY=eyJ...
-
-# Supabase — pour le script smtp:setup uniquement (pas en runtime app)
-SUPABASE_PROJECT_REF=<20-lowercase-letters>
-SUPABASE_ACCESS_TOKEN=sbp_...
-
-# Email — expéditeur des magic links (domaine vérifié dans Resend)
-# En dev local : laisser vide — Supabase CLI utilise Inbucket
-RESEND_API_KEY=re_...
-EMAIL_FROM_ADDRESS=auth@jobnomad.app
-EMAIL_FROM_NAME=JobNomad
-
-# Stripe — Dashboard > Developers > API keys
-STRIPE_SECRET_KEY=sk_live_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-
-# Google AI — aistudio.google.com
-GEMINI_API_KEY=AIza...
-
-# OpenAI — platform.openai.com/api-keys
-OPENAI_API_KEY=sk-proj-...
-
-# Vercel Cron — générer avec: openssl rand -hex 32
-CRON_SECRET=<chaine-aleatoire-32-chars>
-
-# Rate limiting — générer avec: openssl rand -hex 16
-RATE_LIMIT_PEPPER=<chaine-aleatoire-16-chars>
+```bash
+cp .env.example .env.local
+# Remplir les valeurs — voir détails ci-dessous
 ```
 
-> `NEXT_PUBLIC_*` sont exposés au navigateur. Ne jamais y mettre `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, ni les clés API IA/Stripe.
->
-> `SUPABASE_ACCESS_TOKEN` est uniquement pour le script de setup SMTP — ne jamais l'ajouter dans Vercel runtime env vars.
+### Tableau de référence complet
 
-Pour le setup complet de Resend + SMTP en production, voir [`docs/auth-setup.md`](docs/auth-setup.md).
+| Variable | Obligatoire | Dev local | Vercel Prod | Vercel Preview | Sensitive | Source |
+|----------|-------------|-----------|-------------|----------------|-----------|--------|
+| `NEXT_PUBLIC_SITE_URL` | Oui | `http://localhost:3000` | `https://jobnomad.app` | URL preview | Non | Manuel |
+| `NEXT_PUBLIC_SUPABASE_URL` | Oui | `http://localhost:54321` | `https://<ref>.supabase.co` | Idem prod | Non | Supabase > API |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Oui | Clé locale CLI | `sb_publishable_...` | Idem prod | Non | Supabase > API |
+| `SUPABASE_SERVICE_ROLE_KEY` | Oui (serveur) | Clé locale CLI | `eyJ...` | Idem prod | **Oui** | Supabase > API |
+| `SUPABASE_PROJECT_REF` | Script SMTP | Ref du projet | Ref du projet | Idem prod | Non | Supabase > General |
+| `SUPABASE_ACCESS_TOKEN` | Script SMTP | Token perso | *(ne pas ajouter)* | *(ne pas ajouter)* | **Oui** | supabase.com/dashboard/account/tokens |
+| `RESEND_API_KEY` | Prod uniquement | *(laisser vide)* | `re_...` | `re_...` | **Oui** | resend.com > API Keys |
+| `EMAIL_FROM_ADDRESS` | Prod uniquement | *(laisser vide)* | `auth@jobnomad.app` | Idem prod | Non | Domaine vérifié Resend |
+| `EMAIL_FROM_NAME` | Non | *(laisser vide)* | `JobNomad` | Idem prod | Non | Libre |
+| `STRIPE_SECRET_KEY` | Prod uniquement | *(laisser vide)* | `sk_live_...` | `sk_test_...` | **Oui** | Stripe > Developers |
+| `STRIPE_WEBHOOK_SECRET` | Prod uniquement | *(laisser vide)* | `whsec_...` | `whsec_...` | **Oui** | Stripe > Webhooks |
+| `GEMINI_API_KEY` | Prod uniquement | *(laisser vide)* | `AIza...` | Idem prod | **Oui** | aistudio.google.com |
+| `OPENAI_API_KEY` | Prod uniquement | *(laisser vide)* | `sk-proj-...` | Idem prod | **Oui** | platform.openai.com |
+| `CRON_SECRET` | Oui (cron) | Valeur locale | `openssl rand -hex 32` | Idem prod | **Oui** | Générer |
+| `RATE_LIMIT_PEPPER` | Oui | Valeur locale | `openssl rand -hex 16` | Idem prod | **Oui** | Générer |
+
+### Règles de sécurité
+
+- **`NEXT_PUBLIC_*`** sont inlinées dans le bundle navigateur — ne jamais y mettre de secrets.
+- **`SUPABASE_ACCESS_TOKEN`** est un token de management (Management API), pas un token d'app. Ne **jamais** l'ajouter dans les variables Vercel runtime — uniquement en local (`.env.local`) et en GitHub Secret CI.
+- **`SUPABASE_SERVICE_ROLE_KEY`** bypass toutes les politiques RLS — uniquement dans les route handlers serveur (`app/api/cron/`), jamais côté client.
+- En dev local, `RESEND_API_KEY` n'est pas nécessaire : Supabase CLI capture tous les emails via [Inbucket](http://localhost:54324).
+
+### Générer les secrets
+
+```bash
+# CRON_SECRET
+openssl rand -hex 32
+
+# RATE_LIMIT_PEPPER
+openssl rand -hex 16
+```
+
+Pour le setup complet Resend + SMTP + Vercel + DNS, voir [`docs/auth-setup.md`](docs/auth-setup.md).
 
 ## Scripts disponibles
 
