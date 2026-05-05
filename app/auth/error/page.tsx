@@ -1,4 +1,7 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
+import { AuthLayout } from '@/components/auth/auth-layout'
+import { Button } from '@/components/ui/button'
 
 export const metadata: Metadata = {
   title: 'Authentication error — JobNomad',
@@ -6,11 +9,23 @@ export const metadata: Metadata = {
 }
 
 /**
- * /auth/error — Shown when auth fails (expired link, bad code, etc.)
+ * /auth/error — Shown when authentication fails (expired link, bad code, etc.)
  *
- * Reads ?reason= to show a human-friendly message.
- * Never exposes internal error details.
+ * Reads ?reason= to show a human-friendly error message.
+ *
+ * Security:
+ *  - The `reason` query param is mapped through a strict allowlist of keys.
+ *    Unknown values fall back to the generic error — the raw value is NEVER
+ *    rendered in the DOM, preventing reflected XSS via crafted URLs.
+ *  - No internal error details, stack traces, or Supabase error messages
+ *    are ever surfaced to the user.
+ *  - searchParams is typed as Promise<{ reason?: string }> per Next.js 16
+ *    (async params — see AGENTS.md).
  */
+
+// ---------------------------------------------------------------------------
+// Error message mapping — exhaustive allowlist
+// ---------------------------------------------------------------------------
 
 const ERROR_MESSAGES: Record<string, { title: string; body: string }> = {
   missing_code: {
@@ -36,69 +51,71 @@ const DEFAULT_ERROR = {
   body: 'An unexpected error occurred. Please try signing in again.',
 }
 
+// ---------------------------------------------------------------------------
+// Warning icon
+// ---------------------------------------------------------------------------
+
+function WarningIcon() {
+  return (
+    <div
+      className="flex items-center justify-center w-14 h-14 rounded-full bg-danger-soft"
+      aria-hidden="true"
+    >
+      <svg
+        width="28"
+        height="28"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="var(--danger)"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+        <line x1="12" y1="9" x2="12" y2="13" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
+      </svg>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+
 export default async function AuthErrorPage({
   searchParams,
 }: {
   searchParams: Promise<{ reason?: string }>
 }) {
   const { reason } = await searchParams
-  const { title, body } = (reason && ERROR_MESSAGES[reason]) || DEFAULT_ERROR
+
+  // Map through strict allowlist — raw `reason` value is NEVER used in JSX.
+  const { title, body } =
+    (reason && ERROR_MESSAGES[reason]) || DEFAULT_ERROR
 
   return (
-    <div
-      className="flex flex-col flex-1 items-center justify-center px-6 py-12"
-      style={{ backgroundColor: 'var(--bg)' }}
-    >
-      <div
-        className="w-full max-w-sm flex flex-col items-center text-center gap-6 p-8 border"
-        style={{
-          backgroundColor: 'var(--surface)',
-          borderColor: 'var(--border)',
-          borderRadius: 'var(--radius-2xl)',
-          boxShadow: 'var(--shadow-md)',
-        }}
-      >
-        {/* Warning icon */}
-        <div
-          className="flex items-center justify-center w-14 h-14 rounded-full"
-          style={{ backgroundColor: 'var(--danger-soft)' }}
-        >
-          <svg
-            width="28"
-            height="28"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="var(--danger)"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
+    <AuthLayout
+      title={title}
+      subtitle={body}
+      icon={<WarningIcon />}
+      footer={
+        <>
+          {/* Primary CTA: try again → /auth/login */}
+          <Button asChild className="w-full max-w-xs">
+            <Link href="/auth/login">Try again</Link>
+          </Button>
+
+          {/* Secondary CTA: back to landing */}
+          <Link
+            href="/"
+            className="text-body-sm text-text-muted transition-colors hover:text-text-soft"
           >
-            <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-            <line x1="12" y1="9" x2="12" y2="13" />
-            <line x1="12" y1="17" x2="12.01" y2="17" />
-          </svg>
-        </div>
-
-        <h1 className="text-display-md" style={{ color: 'var(--text)' }}>
-          {title}
-        </h1>
-        <p className="text-body-lg" style={{ color: 'var(--text-soft)' }}>
-          {body}
-        </p>
-
-        <a
-          href="/auth/login"
-          className="text-label-md px-4 py-2 transition-colors"
-          style={{
-            backgroundColor: 'var(--primary)',
-            color: 'var(--surface)',
-            borderRadius: 'var(--radius-md)',
-          }}
-        >
-          Back to sign in
-        </a>
-      </div>
-    </div>
+            &larr; Back to home
+          </Link>
+        </>
+      }
+    />
   )
 }
