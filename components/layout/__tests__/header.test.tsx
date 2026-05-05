@@ -49,6 +49,23 @@ vi.mock('next/dynamic', () => ({
 }))
 
 /**
+ * Mock MobileNav so Header tests don't need to set up the full Sheet
+ * environment. We capture the props passed to verify Header forwards them
+ * correctly. MobileNav's own behavior is tested in mobile-nav.test.tsx.
+ */
+vi.mock('../mobile-nav', () => ({
+  MobileNav: ({ variant, userEmail }: { variant?: string; userEmail?: string }) => (
+    <div
+      data-testid="mobile-nav"
+      data-variant={variant}
+      data-user-email={userEmail}
+    >
+      <button aria-label="Open navigation menu">menu</button>
+    </div>
+  ),
+}))
+
+/**
  * Mock the signOut Server Action.
  *
  * Server Actions are imported at the module level in header.tsx. We mock the
@@ -161,5 +178,53 @@ describe('Header -- accessibility', () => {
     const { container } = render(<Header />)
     const nav = container.querySelector('nav[aria-label="Main navigation"]')
     expect(nav).not.toBeNull()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// MobileNav prop forwarding
+//
+// Verifies that Header passes the correct variant and userEmail to MobileNav.
+// MobileNav's own behavior (links, sign out, a11y) is tested in mobile-nav.test.tsx.
+// ---------------------------------------------------------------------------
+
+describe('Header -- MobileNav prop forwarding', () => {
+  it('passes variant="public" to MobileNav', () => {
+    const { container } = render(<Header variant="public" />)
+    const mobileNav = container.querySelector('[data-testid="mobile-nav"]')
+    expect(mobileNav?.getAttribute('data-variant')).toBe('public')
+  })
+
+  it('passes variant="app" to MobileNav', () => {
+    const { container } = render(<Header variant="app" userEmail="test@example.com" />)
+    const mobileNav = container.querySelector('[data-testid="mobile-nav"]')
+    expect(mobileNav?.getAttribute('data-variant')).toBe('app')
+  })
+
+  it('passes userEmail to MobileNav in app variant', () => {
+    const { container } = render(<Header variant="app" userEmail="alice@example.com" />)
+    const mobileNav = container.querySelector('[data-testid="mobile-nav"]')
+    expect(mobileNav?.getAttribute('data-user-email')).toBe('alice@example.com')
+  })
+
+  it('passes undefined userEmail to MobileNav when not provided', () => {
+    const { container } = render(<Header variant="app" />)
+    const mobileNav = container.querySelector('[data-testid="mobile-nav"]')
+    // data-user-email attribute should be absent or empty when userEmail is undefined
+    const attr = mobileNav?.getAttribute('data-user-email')
+    expect(attr === null || attr === 'undefined' || attr === '').toBe(true)
+  })
+
+  it('MobileNav is rendered inside the mobile-only container', () => {
+    const { container } = render(<Header variant="public" />)
+    // The mobile container has class "flex md:hidden"
+    const mobileArea = container.querySelector('.\\[flex\\].\\[md\\:hidden\\]') ??
+      Array.from(container.querySelectorAll('div')).find(
+        (el) => el.className.includes('md:hidden') && el.className.includes('flex')
+      )
+    expect(mobileArea).not.toBeNull()
+    // MobileNav should be a descendant of the mobile area
+    const mobileNav = mobileArea?.querySelector('[data-testid="mobile-nav"]')
+    expect(mobileNav).not.toBeNull()
   })
 })
