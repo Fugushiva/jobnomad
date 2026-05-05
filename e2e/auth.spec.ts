@@ -110,7 +110,24 @@ test.describe('Verify page', () => {
   test('renders check your email message', async ({ page }) => {
     await page.goto('/auth/verify')
     await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible()
-    await expect(page.getByRole('link', { name: /try again/i })).toHaveAttribute('href', '/auth/login')
+    // "Try again" was renamed to "Use a different email" for clearer UX (#51)
+    await expect(page.getByRole('link', { name: /use a different email/i })).toHaveAttribute('href', '/auth/login')
+  })
+
+  test('renders "Back to home" link pointing to "/"', async ({ page }) => {
+    await page.goto('/auth/verify')
+    // Multiple links on the page — find the one explicitly labelled "Back to home"
+    const backLink = page.getByRole('link', { name: /back to home/i })
+    await expect(backLink).toBeVisible()
+    await expect(backLink).toHaveAttribute('href', '/')
+  })
+
+  test('mail icon has aria-hidden (decorative only)', async ({ page }) => {
+    await page.goto('/auth/verify')
+    // The icon circle wrapper is aria-hidden — it must not be in the accessibility tree
+    const iconCircle = page.locator('[aria-hidden="true"].motion-safe\\:animate-pulse')
+    // Playwright can find aria-hidden elements via locator (they're in the DOM)
+    await expect(iconCircle).toBeAttached()
   })
 })
 
@@ -189,5 +206,95 @@ test.describe('Logout flow', () => {
     const signInLinks = page.getByRole('link', { name: 'Sign in' })
     await expect(signInLinks.first()).toBeVisible()
     await expect(signInLinks.first()).toHaveAttribute('href', '/auth/login')
+  })
+})
+
+/**
+ * Visual coherence tests — issue #51
+ *
+ * Verify that all three auth pages share the same structural design:
+ *  - Logo (JobNomad brand) visible on every page.
+ *  - A single <h1> per page.
+ *  - <main id="main"> is present (skip-link accessibility target).
+ *  - No inline CSS `style` attributes on the page card (all styling via Tailwind).
+ *  - Back-navigation links are present and correct.
+ *
+ * These tests run against the real dev server and therefore catch regressions
+ * that unit tests might miss (e.g. CSS token not resolving, layout broken).
+ */
+test.describe('Auth pages visual coherence (#51)', () => {
+  const AUTH_PAGES = [
+    { path: '/auth/login',                  label: 'login' },
+    { path: '/auth/verify',                 label: 'verify' },
+    { path: '/auth/error?reason=link_expired', label: 'error' },
+  ] as const
+
+  for (const { path, label } of AUTH_PAGES) {
+    test(`[${label}] renders the JobNomad logo`, async ({ page }) => {
+      await page.goto(path)
+      // Logo always renders the brand name in a link
+      await expect(page.getByText('JobNomad').first()).toBeVisible()
+    })
+
+    test(`[${label}] has exactly one <h1>`, async ({ page }) => {
+      await page.goto(path)
+      const headings = page.getByRole('heading', { level: 1 })
+      await expect(headings).toHaveCount(1)
+    })
+
+    test(`[${label}] has <main id="main"> (skip-link target)`, async ({ page }) => {
+      await page.goto(path)
+      const main = page.locator('main#main')
+      await expect(main).toBeAttached()
+    })
+
+    test(`[${label}] has no inline style attributes on the Card container`, async ({ page }) => {
+      await page.goto(path)
+      /**
+       * The old verify/error pages used inline `style={{ backgroundColor: 'var(--bg)' }}`
+       * After the polish they use Tailwind classes exclusively.
+       * This test catches any regression where a style attribute is re-introduced
+       * on the card/container elements.
+       *
+       * We specifically check the card-level containers (not SVG attributes).
+       * SVG presentation attributes (stroke, fill) are NOT `style` attributes.
+       */
+      const elementsWithStyle = await page.locator('main > *[style], main > * > *[style]').count()
+      expect(elementsWithStyle).toBe(0)
+    })
+  }
+
+  test('[login] has "Back to home" link pointing to "/"', async ({ page }) => {
+    await page.goto('/auth/login')
+    await expect(page.getByRole('link', { name: /back to home/i })).toHaveAttribute('href', '/')
+  })
+
+  test('[verify] has "Use a different email" link pointing to /auth/login', async ({ page }) => {
+    await page.goto('/auth/verify')
+    await expect(
+      page.getByRole('link', { name: /use a different email/i })
+    ).toHaveAttribute('href', '/auth/login')
+  })
+
+  test('[error] has "Try again" primary CTA pointing to /auth/login', async ({ page }) => {
+    await page.goto('/auth/error?reason=link_expired')
+    await expect(page.getByRole('link', { name: /try again/i })).toHaveAttribute('href', '/auth/login')
+  })
+
+  test('[error] has "Back to home" link pointing to "/"', async ({ page }) => {
+    await page.goto('/auth/error?reason=link_expired')
+    const links = page.getByRole('link', { name: /back to home/i })
+    await expect(links.first()).toHaveAttribute('href', '/')
+  })
+
+  test('[error] raw reason param is NOT reflected in page text (XSS guard)', async ({ page }) => {
+    const maliciousReason = 'INJECTED_VALUE_XYZ_12345'
+    await page.goto(`/auth/error?reason=${maliciousReason}`)
+    // The page should fall back to default error and not reflect the raw value
+    await expect(page.getByText(maliciousReason)).toHaveCount(0)
+    // Should show the default error heading instead
+    await expect(
+      page.getByRole('heading', { name: /something went wrong/i })
+    ).toBeVisible()
   })
 })
