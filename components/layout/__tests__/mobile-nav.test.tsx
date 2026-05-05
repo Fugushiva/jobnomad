@@ -53,7 +53,7 @@ vi.mock('@/components/brand/logo', () => ({
 vi.mock('@/components/ui/button', () => ({
   Button: ({
     children,
-    asChild: _asChild,
+    asChild: _asChild, // eslint-disable-line @typescript-eslint/no-unused-vars
     ...props
   }: { children: React.ReactNode; asChild?: boolean } & React.ButtonHTMLAttributes<HTMLButtonElement>) => (
     <button {...props}>{children}</button>
@@ -85,7 +85,7 @@ vi.mock('@/components/ui/sheet', () => ({
   ),
   SheetTrigger: ({
     children,
-    asChild: _asChild,
+    asChild: _asChild, // eslint-disable-line @typescript-eslint/no-unused-vars
   }: {
     children: React.ReactNode
     asChild?: boolean
@@ -98,7 +98,7 @@ vi.mock('@/components/ui/sheet', () => ({
   ),
   SheetTitle: ({
     children,
-    asChild: _asChild,
+    asChild: _asChild, // eslint-disable-line @typescript-eslint/no-unused-vars
   }: {
     children: React.ReactNode
     asChild?: boolean

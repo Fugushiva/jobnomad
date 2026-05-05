@@ -226,8 +226,7 @@ test.describe('MobileNav — accessibility', () => {
 
     for (let i = 0; i < 8; i++) {
       await page.keyboard.press('Tab')
-      const focusedEl = await page.evaluate(() => document.activeElement)
-      // focusedEl is an ElementHandle — check that it's within the dialog
+      // Check that the focused element is within the dialog
       const isInsideDialog = await page.evaluate(() => {
         const active = document.activeElement
         const dialogEl = document.querySelector('[role="dialog"]')

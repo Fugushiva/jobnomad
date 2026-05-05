@@ -149,7 +149,7 @@ jobnomad/
 ├── components/                 # Composants React réutilisables
 │   ├── ui/                     # 20 shadcn/ui primitives (dont Toaster Sonner)
 │   ├── brand/                  # Logo, LogoMark
-│   ├── layout/                 # Header, Footer, ThemeToggle
+│   ├── layout/                 # Header, MobileNav, Footer, ThemeToggle, nav-links
 │   ├── auth/                   # SignedOutToast (toast post-logout)
 │   ├── jobs/                   # JobCard, ScoreBadge, RedFlagBadge
 │   ├── feed/                   # FeedSkeleton
@@ -187,6 +187,7 @@ jobnomad/
 │   ├── a11y.spec.ts            # Tests accessibilité
 │   ├── auth.spec.ts            # Tests auth flow complet
 │   ├── auth-smtp-health.spec.ts# Smoke test SMTP (opt-in, SMTP_HEALTH_TEST=1)
+│   ├── mobile-nav.spec.ts      # Tests drawer mobile (breakpoint, open/close, a11y)
 │   └── toast.spec.ts           # Tests toast (rendu, dismiss, responsive, a11y)
 ├── docs/
 │   ├── db-schema.md            # ERD, politique de rétention, décisions archi
@@ -312,6 +313,53 @@ JobNomad utilise **Supabase Auth** avec les magic links (email OTP). Pas de mots
 - Aucune route GET de déconnexion (l'ancienne `/auth/signout` a été supprimée).
 - Pas de PII (email, user ID) loggé dans les Server Actions.
 - `scope: 'local'` évite un logout involontaire cross-device.
+
+## Navigation mobile
+
+Le `Header` affiche une navigation desktop (liens horizontaux) visible à partir du breakpoint `md` (768 px). En dessous, un drawer slide-in (bouton burger) prend le relais.
+
+### Architecture
+
+```
+components/layout/
+├── header.tsx          # Shell : logo + desktop nav + desktop actions + mobile area
+├── mobile-nav.tsx      # Drawer mobile : Sheet + trigger burger + MobileNavContent
+├── nav-links.ts        # Source unique des liens nav (public + app) -- import partagé
+└── theme-toggle.tsx    # Bascule thème (rendu côté du burger, hors du drawer)
+```
+
+`nav-links.ts` est la **source unique de vérité** pour les liens de navigation. Toute modification des routes doit se faire dans ce fichier — desktop et mobile restent automatiquement en sync.
+
+### Comportement
+
+| Viewport | Burger | Nav desktop | Drawer |
+|---|---|---|---|
+| `< 768px` | Visible | Caché | S'ouvre via burger |
+| `≥ 768px` | Caché | Visible | N'existe pas |
+
+### Accessibilité (garanties Radix Dialog)
+
+- **Focus trap** : le focus clavier reste dans le drawer quand il est ouvert.
+- **ESC** ferme le drawer automatiquement.
+- **Overlay clic** ferme le drawer.
+- `role="dialog"` + `aria-labelledby` câblés automatiquement par Radix.
+- `aria-label="Open navigation menu"` sur le bouton burger.
+- `aria-label="Mobile navigation"` sur le `<nav>` interne.
+
+### Sécurité
+
+Le bouton "Sign out" dans le drawer utilise la même `signOut` Server Action que le menu desktop — implémentée en `<form action={signOut}>`. Garanties :
+- Requête POST → non reproductible par un lien GET cross-site (CSRF-safe).
+- Session invalidée côté serveur Supabase (pas uniquement cookie-cleared).
+- Des **tests de régression de sécurité** (`[SECURITY]`) dans `mobile-nav.test.tsx` vérifient que la structure form/submit n'est pas remplacée accidentellement par un lien `<a>` ou un `onClick + fetch`.
+
+### Tests
+
+| Type | Fichier | Couverture |
+|---|---|---|
+| Unit (Vitest) | `components/layout/__tests__/mobile-nav.test.tsx` | Structure, variants, sécurité signOut, parity nav-links |
+| Unit (Vitest) | `components/layout/__tests__/header.test.tsx` | Prop forwarding variant/email → MobileNav |
+| E2E (Playwright) | `e2e/mobile-nav.spec.ts` | Breakpoint, open/close, ESC, overlay, navigation, focus trap, a11y |
 
 ## Notifications (toasts)
 
