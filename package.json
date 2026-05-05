@@ -12,7 +12,10 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:all": "vitest run && playwright test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "smtp:setup": "tsx scripts/setup-supabase-smtp.ts",
+    "smtp:dry": "tsx scripts/setup-supabase-smtp.ts --dry-run",
+    "smtp:verify": "tsx scripts/setup-supabase-smtp.ts --verify"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -62,6 +65,7 @@
     "eslint-config-next": "16.2.4",
     "happy-dom": "^20.9.0",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5",
     "vitest": "^4.1.5"
   }
