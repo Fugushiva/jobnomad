@@ -5,6 +5,7 @@ import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { JobCard, type JobCardData } from '@/components/jobs/job-card'
 import { Button } from '@/components/ui/button'
+import { SignedOutToast } from '@/components/auth/signed-out-toast'
 
 export const metadata: Metadata = {
   title: 'JobNomad — Remote jobs for digital nomads',
@@ -52,9 +53,23 @@ const SAMPLE_JOBS: JobCardData[] = [
   },
 ]
 
-export default function Home() {
+/**
+ * Next.js 16: searchParams is a Promise — must be awaited.
+ * The `signed_out` param is set by the signOut Server Action redirect.
+ * It is a boolean UI signal only — never reflected as raw text content.
+ */
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ signed_out?: string }>
+}) {
+  const params = await searchParams
+  const showSignedOutToast = params.signed_out === '1'
+
   return (
     <div className="flex flex-col flex-1 bg-bg text-text">
+      {/* Fires a confirmation toast and removes ?signed_out=1 from the URL */}
+      <SignedOutToast show={showSignedOutToast} />
       <Header variant="public" />
 
       <main id="main" className="flex flex-col flex-1">
