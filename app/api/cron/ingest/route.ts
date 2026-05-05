@@ -19,10 +19,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { timingSafeEqual } from 'crypto'
 import { randomUUID } from 'crypto'
 import { createServiceClient } from '@/src/lib/supabase/service'
 import { runIngestion } from '@/src/lib/sources/ingest'
+import { isAuthorizedCronRequest, makeCronLogger } from '@/src/lib/cron/auth'
 import type { IngestResult } from '@/src/lib/sources/types'
 
 // ---------------------------------------------------------------------------
@@ -32,64 +32,6 @@ import type { IngestResult } from '@/src/lib/sources/types'
 export const maxDuration = 60
 
 // ---------------------------------------------------------------------------
-// Authorization helper (timing-safe, A07)
-// ---------------------------------------------------------------------------
-
-function isAuthorized(request: NextRequest): boolean {
-  const cronSecret = process.env.CRON_SECRET
-  if (!cronSecret) {
-    // No secret configured — reject all requests (fail closed)
-    return false
-  }
-
-  const authHeader = request.headers.get('authorization')
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return false
-  }
-
-  const provided = authHeader.slice(7) // remove "Bearer "
-  const expected = `${cronSecret}`
-
-  // Constant-time comparison prevents timing attacks
-  try {
-    const a = Buffer.from(provided.padEnd(expected.length, '\0'))
-    const b = Buffer.from(expected.padEnd(provided.length, '\0'))
-    // Both must be same length for timingSafeEqual
-    const normalised = Math.max(a.length, b.length)
-    const aBuf = Buffer.alloc(normalised)
-    const bBuf = Buffer.alloc(normalised)
-    a.copy(aBuf)
-    b.copy(bBuf)
-    return timingSafeEqual(aBuf, bBuf) && provided.length === expected.length
-  } catch {
-    return false
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Structured logger (safe — never logs descriptions or secrets)
-// ---------------------------------------------------------------------------
-
-function makeLogger(runId: string) {
-  return function log(level: 'info' | 'warn' | 'error', message: string, meta?: Record<string, unknown>) {
-    const entry = JSON.stringify({
-      level,
-      message,
-      runId,
-      ...meta,
-      ts: new Date().toISOString(),
-    })
-    if (level === 'error') {
-      console.error(entry)
-    } else if (level === 'warn') {
-      console.warn(entry)
-    } else {
-      console.log(entry)
-    }
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Route handler
 // ---------------------------------------------------------------------------
 
@@ -97,13 +39,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   // -------------------------------------------------------------------------
   // 1. Authorization (A07 — timing-safe)
   // -------------------------------------------------------------------------
-  if (!isAuthorized(request)) {
+  if (!isAuthorizedCronRequest(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const runId = randomUUID()
   const supabase = createServiceClient()
-  const log = makeLogger(runId)
+  const log = makeCronLogger(runId)
   const startedAt = Date.now()
 
   log('info', 'ingest cron started', { runId })
