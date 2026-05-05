@@ -163,6 +163,8 @@ jobnomad/
 - **`docs/ui.md`** — Guide des composants shadcn/ui et design system (tokens, accessibility)
 - **`docs/ci-cd.md`** — Runbook complet : secrets, rotation CRON_SECRET, debugging, variables Vercel
 - **`docs/auth-setup.md`** — Configuration Supabase Auth (magic links)
+- **`docs/runbook-ingestion.md`** — Runbook pipeline ingestion : health check, trigger manuel, disable source, diagnostics
+- **`docs/adr/ADR-007-multi-source-mvp.md`** — Decision: 3 sources en phase 1 MVP
 
 ## Base de données
 
