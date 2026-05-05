@@ -127,7 +127,7 @@ jobnomad/
 │   ├── page.tsx                # Home/landing
 │   └── favicon.ico
 ├── components/                 # Composants React réutilisables
-│   ├── ui/                     # 19 shadcn/ui primitives
+│   ├── ui/                     # 20 shadcn/ui primitives (dont Toaster Sonner)
 │   ├── brand/                  # Logo, LogoMark
 │   ├── layout/                 # Header, Footer, ThemeToggle
 │   ├── jobs/                   # JobCard, ScoreBadge, RedFlagBadge
@@ -135,8 +135,11 @@ jobnomad/
 │   ├── states/                 # EmptyState, ErrorState
 │   └── providers/              # ThemeProvider
 ├── hooks/                      # React hooks
-│   └── use-theme-toggle.ts     # Bascule thème light/dark/system
+│   ├── use-theme-toggle.ts     # Bascule thème light/dark/system
+│   └── use-media-query.ts      # SSR-safe matchMedia hook
 ├── lib/                        # Utilitaires métier
+│   ├── toast/
+│   │   └── index.ts            # API toast centralisée (toast + toastError)
 │   ├── forms/
 │   │   └── use-zod-form.ts     # react-hook-form + Zod integration
 │   └── utils.ts                # cn() (classnames merge)
@@ -148,7 +151,8 @@ jobnomad/
 │   ├── seed.sql                # Données de dev local
 │   └── config.toml
 ├── e2e/                        # Tests Playwright E2E
-│   └── a11y.spec.ts            # 15 tests accessibilité
+│   ├── a11y.spec.ts            # 15 tests accessibilité
+│   └── toast.spec.ts           # 11 tests toast (rendu, dismiss, responsive, a11y)
 ├── docs/
 │   ├── db-schema.md            # ERD, politique de rétention, décisions archi
 │   ├── ui.md                   # Guide des composants shadcn/ui
@@ -189,6 +193,68 @@ RLS activé sur toutes les tables. Schéma complet : [`docs/db-schema.md`](docs/
 ```bash
 npx supabase gen types typescript --linked > src/lib/supabase/database.types.ts
 ```
+
+## Notifications (toasts)
+
+Le projet utilise [Sonner](https://sonner.emilkowal.ski) comme unique système de toasts.
+`<Toaster />` est monté une seule fois dans `app/layout.tsx`, à l'intérieur du `<ThemeProvider>`.
+
+### Usage
+
+Depuis n'importe quel Client Component :
+
+```tsx
+'use client'
+import { toast, toastError } from '@/lib/toast'
+
+// Succès
+toast.success('Job sauvegardé')
+
+// Info
+toast.info('Profil mis à jour')
+
+// Warning
+toast.warning('Vous approchez votre limite quotidienne')
+
+// Promise — loading → success/error automatique
+toast.promise(saveJob(id), {
+  loading: 'Sauvegarde…',
+  success: 'Job sauvegardé',
+  error: 'Échec de la sauvegarde',
+})
+
+// Erreur — TOUJOURS utiliser toastError, jamais toast.error(error.message)
+try {
+  await saveJob(id)
+} catch (err) {
+  toastError(err, 'Impossible de sauvegarder cette offre')
+}
+```
+
+### Règles de sécurité
+
+- **Ne jamais** passer `error.message` ou `error.stack` brut à `toast.error()`.
+  Cela peut exposer des chemins serveur, messages SQL ou infos infra sensibles.
+- **Toujours** utiliser `toastError(err, "message utilisateur")` qui sanitize l'entrée :
+  seuls les strings passés explicitement et le message fallback sont affichés.
+- En développement (`NODE_ENV !== 'production'`), l'erreur brute est loggée
+  dans la console pour debugging — jamais envoyée à l'UI.
+
+### Configuration
+
+| Paramètre | Valeur |
+|---|---|
+| Position desktop | `top-right` (≥ 768 px) |
+| Position mobile | `top-center` (< 768 px) |
+| Durée par défaut | 4 secondes |
+| Thème | Suit `next-themes` automatiquement (dark / light / system) |
+| Couleurs | Tokens design system CSS (`--success-soft`, `--danger-soft`, etc.) |
+
+### Ajouter un toast dans une feature
+
+1. Importer depuis `@/lib/toast` (jamais directement depuis `sonner`).
+2. Pour les erreurs, utiliser **exclusivement** `toastError()`.
+3. Ne pas ajouter de second `<Toaster />` — il est déjà global dans `app/layout.tsx`.
 
 ## Modèle de prix
 
