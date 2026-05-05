@@ -8,12 +8,12 @@
 
 ## Overview
 
-The ingestion cron fetches new job postings from 3 sources every 6 hours,
+The ingestion cron fetches new job postings from 3 sources once daily at midnight UTC,
 deduplicates them, and stores them with `status='pending_extraction'` for
 the extraction cron (T4 — Gemini) to process.
 
 ```
-Vercel Cron (every 6h)
+Vercel Cron (daily at midnight UTC)
   → GET /api/cron/ingest
     → runIngestion() [src/lib/sources/ingest.ts]
       → remoteOKAdapter.fetch()  → POST to jobs (pending_extraction)

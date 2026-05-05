@@ -1,7 +1,7 @@
 /**
  * /api/cron/ingest — Multi-source job ingestion cron handler.
  *
- * Triggered by Vercel Cron every 6 hours (declared in vercel.json).
+ * Triggered by Vercel Cron once daily at midnight UTC (declared in vercel.json).
  * Also callable manually with the correct Authorization header.
  *
  * Architecture: thin wrapper — all business logic is in src/lib/sources/ingest.ts.
