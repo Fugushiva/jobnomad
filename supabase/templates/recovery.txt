@@ -1,0 +1,16 @@
+Reset your JobNomad password
+============================
+
+We received a request to reset your password.
+Click the link below to choose a new password.
+This link expires in 1 hour.
+
+{{ .ConfirmationURL }}
+
+---
+
+If you didn't request a password reset, you can safely ignore this email.
+Your account is secure - no action is needed.
+
+JobNomad - Remote jobs for nomads in Asia
+https://jobnomad.app

@@ -24,7 +24,7 @@
  *   - Verify mode is read-only (GET request only).
  */
 
-import { readFileSync } from 'node:fs'
+import { readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { z } from 'zod'
 
@@ -178,6 +178,112 @@ export async function callManagementApi(
 // Actions
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Email templates
+// ---------------------------------------------------------------------------
+
+const TEMPLATES_DIR = join(process.cwd(), 'supabase', 'templates')
+
+interface EmailTemplateSet {
+  magic_link?: { html: string; txt: string }
+  confirm_signup?: { html: string; txt: string }
+  recovery?: { html: string; txt: string }
+}
+
+function loadTemplates(): EmailTemplateSet {
+  function loadFile(filename: string): string | undefined {
+    const path = join(TEMPLATES_DIR, filename)
+    if (existsSync(path)) {
+      return readFileSync(path, 'utf8')
+    }
+    return undefined
+  }
+
+  const result: EmailTemplateSet = {}
+
+  const mlHtml = loadFile('magic-link.html')
+  const mlTxt = loadFile('magic-link.txt')
+  if (mlHtml && mlTxt) {
+    result.magic_link = { html: mlHtml, txt: mlTxt }
+  }
+
+  const csHtml = loadFile('confirm-signup.html')
+  const csTxt = loadFile('confirm-signup.txt')
+  if (csHtml && csTxt) {
+    result.confirm_signup = { html: csHtml, txt: csTxt }
+  }
+
+  const recHtml = loadFile('recovery.html')
+  const recTxt = loadFile('recovery.txt')
+  if (recHtml && recTxt) {
+    result.recovery = { html: recHtml, txt: recTxt }
+  }
+
+  return result
+}
+
+/**
+ * Push email templates to Supabase Auth config.
+ * Supabase Management API field names for templates:
+ *   mailer_templates_magic_link_content    -- magic link HTML
+ *   mailer_templates_magic_link_content_plain -- magic link TXT (not always in API)
+ *   (Supabase's template API is limited -- we use the main config PATCH endpoint)
+ *
+ * Note: Supabase's Management API does not yet expose all template fields.
+ * The templates in supabase/templates/ serve as the source of truth.
+ * Configure them manually in the Dashboard (Authentication > Email Templates)
+ * using the content of these files, or via the Supabase CLI local config.
+ */
+export async function pushTemplates(vars: RequiredEnv): Promise<void> {
+  const templates = loadTemplates()
+  const loaded = Object.keys(templates)
+
+  if (loaded.length === 0) {
+    console.log('[smtp:templates] No templates found in supabase/templates/. Skipping.')
+    return
+  }
+
+  console.log(`[smtp:templates] Found templates: ${loaded.join(', ')}`)
+
+  // Build the config patch with template fields supported by the Management API
+  // Field names from: https://api.supabase.com/api/v1#tag/projects/patch/v1/projects/{ref}/config/auth
+  const templatePayload: Record<string, string> = {}
+
+  if (templates.magic_link) {
+    templatePayload['mailer_templates_magic_link_content'] = templates.magic_link.html
+  }
+  if (templates.confirm_signup) {
+    templatePayload['mailer_templates_confirmation_content'] = templates.confirm_signup.html
+  }
+  if (templates.recovery) {
+    templatePayload['mailer_templates_recovery_content'] = templates.recovery.html
+  }
+
+  if (Object.keys(templatePayload).length === 0) {
+    console.log('[smtp:templates] No template fields to push. Skipping.')
+    return
+  }
+
+  console.log('[smtp:templates] Pushing templates to Supabase Auth config...')
+
+  const result = await callManagementApi(
+    'PATCH',
+    `/projects/${vars.SUPABASE_PROJECT_REF}/config/auth`,
+    vars.SUPABASE_ACCESS_TOKEN,
+    templatePayload,
+  )
+
+  if (!result.ok) {
+    console.warn('[smtp:templates] WARNING: Template push failed:', result.error)
+    console.warn('[smtp:templates] Templates may need to be set manually in the Supabase Dashboard.')
+    console.warn('[smtp:templates] Dashboard > Authentication > Email Templates')
+    console.warn('[smtp:templates] Template files are in supabase/templates/')
+    // Non-fatal: template push failure does not block SMTP config
+  } else {
+    console.log('[smtp:templates] Templates pushed successfully.')
+  }
+}
+
 export async function applySmtpConfig(vars: RequiredEnv): Promise<void> {
   const config = buildSmtpConfig(vars)
 
@@ -198,6 +304,10 @@ export async function applySmtpConfig(vars: RequiredEnv): Promise<void> {
   }
 
   console.log('[smtp:setup] SUCCESS. SMTP config applied.')
+
+  // Also push email templates
+  await pushTemplates(vars)
+
   console.log('[smtp:setup] Run "npm run smtp:verify" to confirm the config is live.')
 }
 

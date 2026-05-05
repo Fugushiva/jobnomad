@@ -1,0 +1,15 @@
+Sign in to JobNomad
+===================
+
+Click the link below to sign in to your account.
+This link expires in 1 hour and can only be used once.
+
+{{ .ConfirmationURL }}
+
+---
+
+If you didn't request this link, you can safely ignore this email.
+Your account is secure - no action is needed.
+
+JobNomad - Remote jobs for nomads in Asia
+https://jobnomad.app

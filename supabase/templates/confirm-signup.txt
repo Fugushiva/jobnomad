@@ -1,0 +1,16 @@
+Welcome to JobNomad!
+====================
+
+Confirm your email address to start receiving personalized remote job
+matches filtered for your timezone and contractor status.
+
+Click the link below to confirm your account:
+
+{{ .ConfirmationURL }}
+
+---
+
+If you didn't sign up for JobNomad, you can safely ignore this email.
+
+JobNomad - Remote jobs for nomads in Asia
+https://jobnomad.app

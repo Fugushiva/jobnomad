@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="x-apple-disable-message-reformatting" />
+  <title>Reset your JobNomad password</title>
+  <style>
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    @media only screen and (max-width: 600px) {
+      .wrapper { width: 100% !important; }
+      .btn { width: 100% !important; text-align: center !important; }
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;">
+
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f8fafc;">
+    <tr>
+      <td align="center" style="padding: 40px 16px;">
+
+        <table role="presentation" class="wrapper" cellspacing="0" cellpadding="0" border="0" width="560" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+
+          <!-- Header -->
+          <tr>
+            <td style="padding: 40px 48px 32px; border-bottom: 1px solid #f1f5f9;">
+              <span style="font-size: 22px; font-weight: 700; color: #0f172a; letter-spacing: -0.5px;">Job<span style="color: #3b82f6;">Nomad</span></span>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding: 40px 48px 32px;">
+              <h1 style="margin: 0 0 16px; font-size: 24px; font-weight: 600; color: #0f172a; line-height: 1.3;">
+                Reset your password
+              </h1>
+              <p style="margin: 0 0 24px; font-size: 16px; color: #475569; line-height: 1.6;">
+                We received a request to reset your JobNomad password. Click the button below to choose a new password. This link expires in <strong>1 hour</strong>.
+              </p>
+
+              <!-- CTA button -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td style="border-radius: 8px; background-color: #3b82f6;">
+                    <a href="{{ .ConfirmationURL }}"
+                       class="btn"
+                       target="_blank"
+                       style="display: inline-block; padding: 14px 32px; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 8px; mso-padding-alt: 0; background-color: #3b82f6;">
+                      Reset password
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Fallback URL -->
+              <p style="margin: 24px 0 0; font-size: 13px; color: #94a3b8; line-height: 1.5;">
+                Or copy and paste this URL into your browser:
+              </p>
+              <p style="margin: 8px 0 0; font-size: 12px; color: #94a3b8; word-break: break-all; line-height: 1.5;">
+                {{ .ConfirmationURL }}
+              </p>
+            </td>
+          </tr>
+
+          <!-- Security notice -->
+          <tr>
+            <td style="padding: 24px 48px; background-color: #f8fafc; border-top: 1px solid #f1f5f9; border-radius: 0 0 12px 12px;">
+              <p style="margin: 0; font-size: 13px; color: #94a3b8; line-height: 1.6;">
+                If you didn't request a password reset, please ignore this email. Your account is secure &mdash; no action is needed.
+              </p>
+              <p style="margin: 12px 0 0; font-size: 13px; color: #94a3b8; line-height: 1.6;">
+                This link expires in 1 hour and can only be used once.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+        <!-- Footer -->
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="560" style="margin-top: 24px;">
+          <tr>
+            <td style="padding: 0 48px; text-align: center;">
+              <p style="margin: 0; font-size: 12px; color: #cbd5e1; line-height: 1.6;">
+                JobNomad &mdash; Remote jobs for nomads in Asia<br />
+                <a href="https://jobnomad.app" style="color: #94a3b8; text-decoration: none;">jobnomad.app</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
