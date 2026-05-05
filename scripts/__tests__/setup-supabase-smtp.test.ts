@@ -46,9 +46,9 @@ describe('buildSmtpConfig', () => {
     expect(config.smtp_host).toBe('smtp.resend.com')
   })
 
-  it('sets smtp_port to 465 (TLS)', () => {
+  it('sets smtp_port to "465" as string (Supabase API requires string)', () => {
     const config = buildSmtpConfig(validVars)
-    expect(config.smtp_port).toBe(465)
+    expect(config.smtp_port).toBe('465')
   })
 
   it('sets smtp_user to "resend"', () => {
@@ -412,7 +412,7 @@ describe('verifySmtpConfig', () => {
   function mockCorrectConfig() {
     const config: SmtpConfig & Record<string, unknown> = {
       smtp_host: 'smtp.resend.com',
-      smtp_port: 465,
+      smtp_port: '465',  // API returns string
       smtp_user: 'resend',
       smtp_admin_email: 'auth@jobnomad.app',
       smtp_sender_name: 'JobNomad',
@@ -466,7 +466,7 @@ describe('verifySmtpConfig', () => {
       status: 200,
       text: vi.fn().mockResolvedValue(JSON.stringify({
         smtp_host: 'smtp.sendgrid.net', // wrong!
-        smtp_port: 465,
+        smtp_port: '465',
         smtp_user: 'resend',
         smtp_admin_email: 'auth@jobnomad.app',
         external_email_enabled: true,
@@ -487,7 +487,7 @@ describe('verifySmtpConfig', () => {
       status: 200,
       text: vi.fn().mockResolvedValue(JSON.stringify({
         smtp_host: 'smtp.resend.com',
-        smtp_port: 465,
+        smtp_port: '465',
         smtp_user: 'resend',
         smtp_admin_email: 'auth@jobnomad.app',
         external_email_enabled: false, // disabled!

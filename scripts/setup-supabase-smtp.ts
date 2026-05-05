@@ -88,7 +88,7 @@ type RequiredEnv = z.infer<typeof requiredEnvSchema>
 export interface SmtpConfig {
   smtp_admin_email: string
   smtp_host: string
-  smtp_port: number
+  smtp_port: string   // Supabase Management API expects a string, not a number
   smtp_user: string
   smtp_pass: string
   smtp_sender_name: string
@@ -102,7 +102,7 @@ export function buildSmtpConfig(vars: RequiredEnv): SmtpConfig {
   return {
     smtp_admin_email: vars.EMAIL_FROM_ADDRESS,
     smtp_host: 'smtp.resend.com',
-    smtp_port: 465,
+    smtp_port: '465',  // API requires string
     smtp_user: 'resend',
     smtp_pass: vars.RESEND_API_KEY,
     smtp_sender_name: vars.EMAIL_FROM_NAME,
@@ -357,8 +357,9 @@ export async function verifySmtpConfig(vars: RequiredEnv): Promise<void> {
   if (smtpConfig.smtp_host !== 'smtp.resend.com') {
     issues.push(`smtp_host: expected "smtp.resend.com", got "${smtpConfig.smtp_host}"`)
   }
-  if (smtpConfig.smtp_port !== 465) {
-    issues.push(`smtp_port: expected 465, got ${smtpConfig.smtp_port}`)
+  // API returns port as string -- compare as string
+  if (String(smtpConfig.smtp_port) !== '465') {
+    issues.push(`smtp_port: expected "465", got "${smtpConfig.smtp_port}"`)
   }
   if (smtpConfig.smtp_user !== 'resend') {
     issues.push(`smtp_user: expected "resend", got "${smtpConfig.smtp_user}"`)
