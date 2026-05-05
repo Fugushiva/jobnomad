@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Himalayas Remote Jobs</title>
+    <link>https://himalayas.app/jobs</link>
+    <description>Remote Jobs on Himalayas</description>
+    <item>
+      <title>Senior Full-Stack Engineer at GammaCloud</title>
+      <link>https://himalayas.app/companies/gammacloud/jobs/senior-full-stack-engineer</link>
+      <guid>himalayas-gammacloud-sfe-2026</guid>
+      <pubDate>2026-05-01T09:00:00Z</pubDate>
+      <description>
+        GammaCloud is a Series B startup building developer tooling. We are looking for a Senior Full-Stack Engineer.
+
+        Stack: Node.js, React, TypeScript, PostgreSQL, AWS.
+
+        You will be working with a small team of 12 engineers spread across Americas and Asia Pacific.
+        We are truly async-first: no timezone requirements whatsoever.
+
+        Salary: $130,000 - $170,000 USD/year + equity.
+        Contractors and employees both welcome. We work with PEO.
+      </description>
+      <company>GammaCloud</company>
+    </item>
+    <item>
+      <title>DevOps Engineer at DeltaOps</title>
+      <link>https://himalayas.app/companies/deltaops/jobs/devops-engineer</link>
+      <guid>himalayas-deltaops-devops-2026</guid>
+      <pubDate>2026-04-28T12:00:00Z</pubDate>
+      <description>
+        DeltaOps needs a DevOps Engineer with AWS and Terraform experience.
+
+        Must be located in the United States or Canada. Valid work authorization required.
+
+        Salary: $110,000 USD/year.
+      </description>
+      <company>DeltaOps</company>
+    </item>
+    <item>
+      <title>Product Designer at EpsilonDesign</title>
+      <link>https://himalayas.app/companies/epsilondesign/jobs/product-designer</link>
+      <guid>himalayas-epsilon-designer-2026</guid>
+      <pubDate>2026-04-25T15:30:00Z</pubDate>
+      <description>
+        EpsilonDesign is looking for an experienced Product Designer (5+ years).
+
+        Location: Worldwide. Async-first.
+
+        Figma, user research, design systems experience required.
+        Salary range: $90,000 - $120,000.
+      </description>
+      <company>EpsilonDesign</company>
+    </item>
+  </channel>
+</rss>

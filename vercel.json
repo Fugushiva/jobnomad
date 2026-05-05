@@ -7,5 +7,10 @@
       "maxDuration": 60
     }
   },
-  "crons": []
+  "crons": [
+    {
+      "path": "/api/cron/ingest",
+      "schedule": "0 */6 * * *"
+    }
+  ]
 }

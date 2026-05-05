@@ -95,6 +95,36 @@ export type Database = {
           },
         ]
       }
+      source_state: {
+        Row: {
+          source: 'remoteok' | 'wwr' | 'himalayas' | 'workingnomads'
+          last_fetched_at: string | null
+          last_etag: string | null
+          last_modified: string | null
+          consecutive_failures: number
+          last_error: string | null
+          updated_at: string
+        }
+        Insert: {
+          source: 'remoteok' | 'wwr' | 'himalayas' | 'workingnomads'
+          last_fetched_at?: string | null
+          last_etag?: string | null
+          last_modified?: string | null
+          consecutive_failures?: number
+          last_error?: string | null
+          updated_at?: string
+        }
+        Update: {
+          source?: 'remoteok' | 'wwr' | 'himalayas' | 'workingnomads'
+          last_fetched_at?: string | null
+          last_etag?: string | null
+          last_modified?: string | null
+          consecutive_failures?: number
+          last_error?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cron_runs: {
         Row: {
           completed_at: string | null

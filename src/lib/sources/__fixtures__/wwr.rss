@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
+  <channel>
+    <title>We Work Remotely: Remote Programming Jobs</title>
+    <link>https://weworkremotely.com/categories/remote-programming-jobs</link>
+    <description>Remote Programming Jobs</description>
+    <item>
+      <title><![CDATA[Senior Backend Engineer at AlphaTech Inc]]></title>
+      <link>https://weworkremotely.com/remote-jobs/alphatech-senior-backend</link>
+      <guid>https://weworkremotely.com/remote-jobs/alphatech-senior-backend</guid>
+      <pubDate>Wed, 01 May 2026 10:00:00 +0000</pubDate>
+      <region><![CDATA[Worldwide]]></region>
+      <jobtype><![CDATA[Full-Time]]></jobtype>
+      <description><![CDATA[
+        <p>AlphaTech Inc is looking for a Senior Backend Engineer to join our remote-first team.</p>
+        <p>You will work with Go, PostgreSQL, and Kubernetes to scale our infrastructure to millions of users.</p>
+        <p>Requirements: 5+ years backend experience, timezone flexibility preferred but not required.</p>
+        <p>Salary: $120,000 - $160,000 USD/year depending on experience.</p>
+      ]]></description>
+      <company><![CDATA[AlphaTech Inc]]></company>
+    </item>
+    <item>
+      <title><![CDATA[React Frontend Developer at BetaSoft]]></title>
+      <link>https://weworkremotely.com/remote-jobs/betasoft-react-frontend</link>
+      <guid>https://weworkremotely.com/remote-jobs/betasoft-react-frontend</guid>
+      <pubDate>Tue, 30 Apr 2026 08:00:00 +0000</pubDate>
+      <description><![CDATA[
+        <p>BetaSoft is hiring a React Frontend Developer.</p>
+        <p>Must have 3+ years of React experience and familiarity with TypeScript.</p>
+        <p>We are a distributed team across EU and APAC. Must have 4h overlap with CET (UTC+1).</p>
+        <p>Compensation: €60,000 - €80,000 per year.</p>
+      ]]></description>
+      <company><![CDATA[BetaSoft]]></company>
+    </item>
+    <item>
+      <title></title>
+      <link>https://weworkremotely.com/remote-jobs/invalid-no-title</link>
+      <description><![CDATA[Some description without a title]]></description>
+      <company><![CDATA[Ghost Corp]]></company>
+    </item>
+  </channel>
+</rss>
