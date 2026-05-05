@@ -46,6 +46,7 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 import { signOut } from '@/src/lib/auth/actions'
+import { NAV_LINKS_PUBLIC, NAV_LINKS_APP } from './nav-links'
 
 /**
  * ThemeToggle is loaded with ssr:false to prevent hydration mismatch.
@@ -75,15 +76,6 @@ interface HeaderProps {
   userEmail?: string
   className?: string
 }
-
-const NAV_LINKS_PUBLIC = [
-  { href: '/jobs', label: 'Browse jobs' },
-]
-
-const NAV_LINKS_APP = [
-  { href: '/feed', label: 'Feed' },
-  { href: '/saved', label: 'Saved' },
-]
 
 /**
  * UserMenu — desktop avatar dropdown for authenticated users.
