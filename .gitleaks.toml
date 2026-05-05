@@ -45,6 +45,27 @@ paths = [
 ]
 
 # ---------------------------------------------------------------------------
+# Test fixtures -- explicitly marked fake credentials in unit tests
+# ---------------------------------------------------------------------------
+# These are dummy strings used in tests that mock fetch and never reach any
+# real API. The format includes 'FAKE_TEST_FIXTURE_NOT_REAL' or 'FAKE_' which
+# cannot be confused with real credentials.
+[[allowlist.commits]]
+description = "test fixtures with explicit FAKE markers"
+regexes = [
+  "FAKE_TEST_FIXTURE_NOT_REAL",
+  "FAKE_GENERIC_TEST",
+  "FAKE_LOG_LEAK_DETECTOR",
+  "FAKE_REDACTED",
+]
+paths = [
+  ".*__tests__/.*",
+  ".*\\.test\\.ts",
+  ".*\\.test\\.tsx",
+  ".*\\.spec\\.ts",
+]
+
+# ---------------------------------------------------------------------------
 # Fingerprint allowlist (surgical -- only specific historical commits/lines)
 # ---------------------------------------------------------------------------
 
