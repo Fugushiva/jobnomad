@@ -222,8 +222,14 @@ Les filtres sont **client-side state** (URL-synced via `useSearchParams`) au-des
 
 ## Tâche 3 — Polish auth pages
 
-**Statut actuel** : login / verify / error fonctionnent mais visuellement basiques
-**Cible** : cohérence avec le design system, micro-interactions soignées
+**Statut** : ✅ Terminé (issue #51 — branche 51-ui-polish)
+**Ce qui a été fait** :
+- Composant partagé `components/auth/auth-layout.tsx` (Card + Logo + h1 + footer)
+- `/auth/login` : consume AuthLayout (suppression doublons)
+- `/auth/verify` : migration inline styles → Tailwind tokens, `<a>` → `<Link>`, animation pulse `motion-safe:animate-pulse`, liens "Use a different email" + "Back to home"
+- `/auth/error` : migration inline styles → Tailwind tokens, dual CTAs (Button "Try again" + Link "Back to home")
+- Tests unitaires Vitest : AuthLayout + 3 pages (758 tests total)
+- Tests E2E Playwright : visual coherence + XSS guard
 
 ### 3.1 `/auth/login`
 
@@ -339,6 +345,6 @@ Ces points sont volontairement reportés :
 
 - [ ] Tâche 1 — Onboarding wizard
 - [ ] Tâche 2 — Feed réel
-- [ ] Tâche 3 — Polish auth pages
+- [x] Tâche 3 — Polish auth pages
 - [ ] Tâche 4 — Landing v2
 - [ ] Annexe A — pages transverses

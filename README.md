@@ -150,7 +150,7 @@ jobnomad/
 │   ├── ui/                     # 20 shadcn/ui primitives (dont Toaster Sonner)
 │   ├── brand/                  # Logo, LogoMark
 │   ├── layout/                 # Header, MobileNav, Footer, ThemeToggle, nav-links
-│   ├── auth/                   # SignedOutToast (toast post-logout)
+│   ├── auth/                   # AuthLayout (layout partagé pages auth) + SignedOutToast
 │   ├── jobs/                   # JobCard, ScoreBadge, RedFlagBadge
 │   ├── feed/                   # FeedSkeleton
 │   ├── states/                 # EmptyState, ErrorState
@@ -293,10 +293,37 @@ JobNomad utilise **Supabase Auth** avec les magic links (email OTP). Pas de mots
 3. Redirection vers `/?signed_out=1`.
 4. `<SignedOutToast>` affiche `toast.success("You have been signed out.")` et nettoie l'URL.
 
+### Pages Auth
+
+| Route | Fichier | Description |
+|---|---|---|
+| `/auth/login` | `app/auth/login/page.tsx` | Formulaire magic link (form + login-form + actions) |
+| `/auth/verify` | `app/auth/verify/page.tsx` | Confirmation post-envoi du lien. Statique, aucun input accepté |
+| `/auth/error` | `app/auth/error/page.tsx` | Erreurs de callback (lien expiré, code manquant, etc.) |
+| `/auth/callback` | `app/auth/callback/route.ts` | Échange du code PKCE → session cookie |
+
+Les trois pages auth (`/auth/login`, `/auth/verify`, `/auth/error`) partagent le composant `AuthLayout` :
+
+```
+components/auth/auth-layout.tsx   ← layout centré : Card + Logo + h1 + footer
+app/auth/
+├── login/
+│   ├── page.tsx          ← consume AuthLayout
+│   ├── login-form.tsx    ← Client Component (react-hook-form + useActionState)
+│   └── actions.ts        ← sendMagicLink() Server Action (Zod + rate-limit + PKCE)
+├── verify/
+│   └── page.tsx          ← consume AuthLayout, icône mail + motion-safe:animate-pulse
+├── error/
+│   └── page.tsx          ← consume AuthLayout, mapping reason → message (allowlist strict)
+└── callback/
+    └── route.ts          ← PKCE exchange → session cookie
+```
+
 ### Fichiers clés Auth
 
 | Fichier | Rôle |
 |---|---|
+| `components/auth/auth-layout.tsx` | Layout partagé des 3 pages auth (Card + Logo + titre + footer) |
 | `src/lib/auth/actions.ts` | `signOut()` Server Action — point d'entrée unique pour la déconnexion |
 | `src/lib/auth/get-user.ts` | `getUser()` — valide le JWT côté serveur (SSR-safe) |
 | `src/lib/auth/rate-limit.ts` | Rate limit connexion par IP hashée |
@@ -313,6 +340,18 @@ JobNomad utilise **Supabase Auth** avec les magic links (email OTP). Pas de mots
 - Aucune route GET de déconnexion (l'ancienne `/auth/signout` a été supprimée).
 - Pas de PII (email, user ID) loggé dans les Server Actions.
 - `scope: 'local'` évite un logout involontaire cross-device.
+- **`/auth/error`** ne reflète jamais `?reason=` brut dans le DOM — mapping via allowlist strict. Tests unitaires vérifient 3 vecteurs : valeur brute, XSS attempt, leak supabase/stack-trace.
+- **`/auth/verify`** est entièrement statique — aucun Server Action exposé, aucun paramètre lu. Zéro surface d'attaque.
+
+### Tests Auth
+
+| Type | Fichier | Couverture |
+|---|---|---|
+| Unit (Vitest) | `components/auth/__tests__/auth-layout.test.tsx` | Structure, logo, h1, icon/children/footer slots, classes Tailwind |
+| Unit (Vitest) | `app/auth/login/__tests__/page.test.tsx` | Metadata, main#main, logo, heading, form, footer link position |
+| Unit (Vitest) | `app/auth/verify/__tests__/page.test.tsx` | Heading, pulse animation class, aria-hidden icon, nav links, no inline styles |
+| Unit (Vitest) | `app/auth/error/__tests__/page.test.tsx` | Table-driven reason mapping, 3 security regression tests, nav CTAs, no inline styles |
+| E2E (Playwright) | `e2e/auth.spec.ts` | Login form, validation, magic link flow, error page messages, visual coherence (logo/h1/main), XSS guard, no inline styles |
 
 ## Navigation mobile
 
