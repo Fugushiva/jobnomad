@@ -8,7 +8,7 @@
  *   - Edge cases: all-zero counts, maximum counts
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '../../supabase/database.types'
 import { runCleanup } from '../run-cleanup'
@@ -51,7 +51,6 @@ function makeSupabaseMock(rpcResult: RpcResult): SupabaseClient<Database> {
   } as unknown as SupabaseClient<Database>
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type MockFn = ReturnType<typeof vi.fn>
 
 function makeLogger(): MockFn {
