@@ -164,14 +164,22 @@ jobnomad/
 │   │   └── use-zod-form.ts     # react-hook-form + Zod integration
 │   └── utils.ts                # cn() (classnames merge)
 ├── src/
-│   └── lib/                    # (Supabase clients, future: business logic)
+│   └── lib/                    # Business logic (server-only)
+│       ├── supabase/            # Supabase clients + generated types
+│       ├── sources/             # Ingestion pipeline (adapters, normalize, ingest)
+│       ├── cron/                # Shared cron helpers (auth, logger)
+│       ├── cleanup/             # Cleanup orchestrator (runCleanup)
+│       └── auth/                # Auth helpers (rate limit, origin, schemas)
 ├── scripts/                    # Scripts de setup et maintenance
 │   ├── setup-supabase-smtp.ts  # Config SMTP Resend via Management API
 │   └── __tests__/              # Tests du script SMTP
 ├── supabase/
 │   ├── migrations/             # Migrations SQL versionnées
 │   ├── templates/              # Templates email (magic-link, confirm-signup, recovery)
-│   ├── tests/                  # Tests RLS + smoke tests fonctions SQL
+│   ├── tests/                  # Tests RLS + pgTAP fonctions SQL
+│   │   ├── rls_*.sql           # 6 fichiers RLS (user_profiles, jobs, saved_jobs…)
+│   │   ├── functions_smoke.sql # Smoke test des fonctions SQL
+│   │   └── functions_cleanup.sql # 29 assertions comportementales cleanup_expired_data
 │   ├── seed.sql                # Données de dev local
 │   └── config.toml             # Config Supabase CLI (Inbucket, auth, redirects)
 ├── e2e/                        # Tests Playwright E2E
@@ -198,7 +206,7 @@ jobnomad/
 
 ## Base de données
 
-9 tables en production sur Supabase Frankfurt :
+10 tables en production sur Supabase Frankfurt :
 
 | Table | Rôle |
 |---|---|
@@ -211,8 +219,51 @@ jobnomad/
 | `ai_usage_log` | Audit coûts IA (toutes API) |
 | `cron_runs` | Santé des cron jobs (monitoring) |
 | `feedback_extraction` | Erreurs d'extraction signalées par les users |
+| `source_state` | ETag/Last-Modified par source d'ingestion |
+| `auth_rate_limits` | Rate-limiting anti-brute-force auth |
 
 RLS activé sur toutes les tables. Schéma complet : [`docs/db-schema.md`](docs/db-schema.md).
+
+## Cron jobs
+
+| Cron | Schedule | Description |
+|---|---|---|
+| `/api/cron/ingest` | `0 0 * * *` (quotidien 00:00 UTC) | Ingestion multi-sources (RemoteOK, WWR, Himalayas) |
+| `/api/cron/cleanup` | `0 3 * * 0` (hebdo dim. 03:00 UTC) | Nettoyage rétention données (Free tier DB < 500 MB) |
+
+Les deux crons utilisent `Authorization: Bearer $CRON_SECRET` (timing-safe).
+Chaque exécution écrit une ligne dans `cron_runs` (`status`, `rows_deleted`, `metadata`).
+
+> **Vercel Hobby** : limite de 2 crons gratuits. Tout futur cron (digest, extraction IA)
+> nécessitera un upgrade Vercel Pro ou un mécanisme de trigger interne.
+
+### Politique de rétention enforced par `/api/cron/cleanup`
+
+| Table | Rétention |
+|---|---|
+| `jobs` status=`active` | expire après **14 jours** |
+| `jobs` status=`expired` | supprimé après **30 jours** (cascade → saved_jobs, job_views, feedback) |
+| `job_views` | supprimé après **60 jours** |
+| `email_digests` | supprimé après **30 jours** |
+| `ai_usage_log` | supprimé après **180 jours** |
+| `feedback_extraction` | supprimé après **180 jours** |
+| `cron_runs` | supprimé après **90 jours** |
+
+### Trigger manuel
+
+```bash
+# Trigger le cleanup manuellement (debug / post-déploiement)
+curl -X GET https://jobnomad.app/api/cron/cleanup \
+  -H "Authorization: Bearer $CRON_SECRET"
+
+# Vérifier le dernier run
+# (requête sur cron_runs via Supabase dashboard ou psql)
+SELECT cron_name, status, rows_deleted, duration_ms, metadata, started_at
+FROM cron_runs
+WHERE cron_name = 'cleanup'
+ORDER BY started_at DESC
+LIMIT 5;
+```
 
 ## Régénérer les types après une migration
 

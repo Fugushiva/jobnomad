@@ -26,7 +26,9 @@ psql $DATABASE_URL -f supabase/tests/rls_user_profiles.sql
 psql $DATABASE_URL -f supabase/tests/rls_saved_jobs.sql
 psql $DATABASE_URL -f supabase/tests/rls_subscriptions.sql
 psql $DATABASE_URL -f supabase/tests/rls_jobs.sql
+psql $DATABASE_URL -f supabase/tests/rls_auth_rate_limits.sql
 psql $DATABASE_URL -f supabase/tests/functions_smoke.sql
+psql $DATABASE_URL -f supabase/tests/functions_cleanup.sql  # 29 behavioral assertions
 ```
 
 ---
@@ -52,7 +54,8 @@ auth.users (Supabase managed)
   │                                  ▲
   └──▶ ai_usage_log                  │ (written by)
                                      │
-cron_runs (no user FK) ◀──── /api/cron/ingest, /digest, /cleanup
+cron_runs (no user FK) ◀──── /api/cron/ingest   (daily  00:00 UTC)
+                        ◀──── /api/cron/cleanup  (weekly 03:00 UTC Sun)
 ```
 
 ---
@@ -118,7 +121,25 @@ Returns columns ready for the job card component (no JOIN needed in app code).
 Returns number of job views remaining today. 25/day for free, 999999 for pro.
 
 ### `cleanup_expired_data() → JSONB`
-Called by `/api/cron/cleanup` weekly. Implements phase 1 retention policy. Returns stats JSON.
+Called by `/api/cron/cleanup` every Sunday at 03:00 UTC. Implements the phase 1 retention policy.
+
+Returns a JSONB object with per-table deletion counts:
+```json
+{
+  "jobs_expired":      5,
+  "jobs_deleted":      12,
+  "views_deleted":     87,
+  "digests_deleted":   3,
+  "ai_log_deleted":    0,
+  "feedback_deleted":  1,
+  "cron_runs_deleted": 2,
+  "ran_at":            "2026-05-04T03:00:00.000Z"
+}
+```
+
+Security: `SECURITY DEFINER`, `REVOKE`'d from `anon` and `authenticated`.
+Only callable by `service_role` (cron handler via `createServiceClient()`).
+The per-table breakdown is stored in `cron_runs.metadata` after each run.
 
 ### `upsert_subscription(...)` 
 Called by Stripe webhook handler. Idempotent upsert.
