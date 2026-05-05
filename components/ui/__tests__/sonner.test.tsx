@@ -21,7 +21,7 @@ afterEach(() => cleanup())
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
 // Capture props passed to the underlying Sonner <Toaster>
-const mockSonnerToaster = vi.fn((_props: Record<string, unknown>) => <div data-testid="sonner-toaster" />)
+const mockSonnerToaster = vi.fn((props: Record<string, unknown>) => <div data-testid="sonner-toaster" {...(props as object)} />)
 
 vi.mock('sonner', () => ({
   Toaster: (props: Record<string, unknown>) => mockSonnerToaster(props),
@@ -36,7 +36,7 @@ vi.mock('next-themes', () => ({
 // useMediaQuery — control desktop / mobile per test
 const mockUseMediaQuery = vi.fn(() => false) // default: mobile
 vi.mock('@/hooks/use-media-query', () => ({
-  useMediaQuery: (_query: string) => mockUseMediaQuery(),
+  useMediaQuery: () => mockUseMediaQuery(),
 }))
 
 // ── Tests ────────────────────────────────────────────────────────────────────
