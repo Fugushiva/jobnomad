@@ -10,9 +10,14 @@
  * Features:
  *   - Skip link for keyboard/screen-reader users (a11y)
  *   - Sticky top with backdrop blur
- *   - Mobile Sheet (hamburger) for viewports < md
- *   - Theme toggle (dark/light/system) -- loaded client-only to avoid hydration mismatch
+ *   - MobileNav drawer (hamburger) for viewports < md (see mobile-nav.tsx)
+ *   - ThemeToggle (dark/light/system) -- loaded client-only to avoid hydration mismatch
  *   - Keyboard navigable: Tab through all interactive elements
+ *
+ * Mobile navigation:
+ *   The Sheet/drawer logic has been extracted into `./mobile-nav.tsx` for
+ *   testability and single-responsibility. The burger trigger and all drawer
+ *   content live there. Header only decides which variant + email to forward.
  *
  * Logout:
  *   The "Sign out" button invokes the `signOut` Server Action via a <form>.
@@ -21,6 +26,7 @@
  *     - Session invalidated on the Supabase server (not just cookie-cleared).
  *     - No client-side fetch or router.push() needed.
  *   See src/lib/auth/actions.ts for the full security contract.
+ *   The same contract is enforced inside MobileNav — see mobile-nav.tsx.
  *
  * @example
  *   <Header variant="public" />
@@ -29,12 +35,10 @@
 
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { useState } from 'react'
-import { Menu, LogOut } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 
 import { Logo } from '@/components/brand/logo'
 import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,6 +51,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 import { signOut } from '@/src/lib/auth/actions'
 import { NAV_LINKS_PUBLIC, NAV_LINKS_APP } from './nav-links'
+import { MobileNav } from './mobile-nav'
 
 /**
  * ThemeToggle is loaded with ssr:false to prevent hydration mismatch.
@@ -137,7 +142,6 @@ export function UserMenu({ email }: { email: string }) {
 }
 
 export function Header({ variant = 'public', userEmail, className }: HeaderProps) {
-  const [mobileOpen, setMobileOpen] = useState(false)
   const navLinks = variant === 'app' ? NAV_LINKS_APP : NAV_LINKS_PUBLIC
 
   return (
@@ -157,7 +161,7 @@ export function Header({ variant = 'public', userEmail, className }: HeaderProps
           {/* Logo */}
           <Logo variant="default" size={28} />
 
-          {/* Desktop nav */}
+          {/* Desktop nav — hidden on mobile, visible from md breakpoint */}
           <nav
             className="hidden md:flex items-center gap-1"
             aria-label="Main navigation"
@@ -173,7 +177,7 @@ export function Header({ variant = 'public', userEmail, className }: HeaderProps
             ))}
           </nav>
 
-          {/* Desktop right actions */}
+          {/* Desktop right actions — hidden on mobile, visible from md breakpoint */}
           <div className="hidden md:flex items-center gap-1">
             <ThemeToggle />
 
@@ -191,81 +195,16 @@ export function Header({ variant = 'public', userEmail, className }: HeaderProps
             )}
           </div>
 
-          {/* Mobile hamburger */}
+          {/*
+           * Mobile area — visible below md breakpoint, hidden above.
+           * ThemeToggle stays here (accessible without opening the drawer).
+           * MobileNav renders the burger trigger + Sheet drawer.
+           * All drawer logic (focus trap, ESC, links, sign out) lives in
+           * components/layout/mobile-nav.tsx.
+           */}
           <div className="flex md:hidden items-center gap-1">
             <ThemeToggle />
-            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-              <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Open navigation menu"
-                >
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[280px] sm:w-[320px]">
-                <SheetHeader>
-                  <SheetTitle asChild>
-                    <Logo variant="default" size={28} asDiv label="JobNomad" />
-                  </SheetTitle>
-                </SheetHeader>
-
-                <nav
-                  className="flex flex-col gap-1 mt-6"
-                  aria-label="Mobile navigation"
-                >
-                  {navLinks.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      className="text-label-md px-3 py-2 rounded-md text-text-soft transition-colors hover:text-text hover:bg-bg-tint"
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      {link.label}
-                    </Link>
-                  ))}
-                </nav>
-
-                {variant === 'public' && (
-                  <div className="flex flex-col gap-2 mt-6 pt-6 border-t border-border">
-                    <Button variant="outline" asChild className="w-full">
-                      <Link href="/auth/login" onClick={() => setMobileOpen(false)}>
-                        Sign in
-                      </Link>
-                    </Button>
-                    <Button asChild className="w-full">
-                      <Link href="/auth/login" onClick={() => setMobileOpen(false)}>
-                        Get started
-                      </Link>
-                    </Button>
-                  </div>
-                )}
-
-                {variant === 'app' && userEmail && (
-                  <div className="mt-6 pt-6 border-t border-border">
-                    <p className="text-caption text-text-muted px-3 mb-2 truncate">{userEmail}</p>
-                    <Link
-                      href="/settings"
-                      className="block text-label-md px-3 py-2 rounded-md text-text-soft transition-colors hover:text-text hover:bg-bg-tint"
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      Settings
-                    </Link>
-                    {/* Sign out via Server Action — CSRF-safe, session invalidated server-side */}
-                    <form action={signOut} className="mt-1">
-                      <button
-                        type="submit"
-                        className="flex w-full items-center gap-2 text-left text-label-md px-3 py-2 rounded-md text-danger transition-colors hover:bg-danger-soft"
-                      >
-                        <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" />
-                        Sign out
-                      </button>
-                    </form>
-                  </div>
-                )}
-              </SheetContent>
-            </Sheet>
+            <MobileNav variant={variant} userEmail={userEmail} />
           </div>
         </div>
       </header>
