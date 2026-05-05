@@ -38,9 +38,17 @@ function getAllowedHostMatchers(): Array<(host: string) => boolean> {
   const matchers: Array<(host: string) => boolean> = []
 
   // 1. Exact match: host of NEXT_PUBLIC_SITE_URL (production canonical)
+  // Also allow the www. subdomain since DNS/CDN may preserve the www prefix
+  // from the incoming request before the apex redirect is applied.
   try {
     const siteHost = new URL(env.NEXT_PUBLIC_SITE_URL).host
     matchers.push((h) => h === siteHost)
+    // Allow www.{apex} in case the request arrives with www. prefix
+    // (Vercel redirects www→apex at the CDN layer, but the x-forwarded-host
+    //  header seen by the server action may already reflect the user-facing host)
+    if (!siteHost.startsWith('www.')) {
+      matchers.push((h) => h === `www.${siteHost}`)
+    }
   } catch {
     // env.NEXT_PUBLIC_SITE_URL is always validated by Zod, so this should never throw
   }

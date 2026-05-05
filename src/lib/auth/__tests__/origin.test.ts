@@ -31,6 +31,12 @@ describe('isAllowedAuthHost', () => {
     expect(isAllowedAuthHost('jobnomad.app')).toBe(true)
   })
 
+  it('allows www. prefix of the canonical site host', () => {
+    // Vercel may preserve the www. prefix in x-forwarded-host before the
+    // apex redirect is applied at the CDN layer.
+    expect(isAllowedAuthHost('www.jobnomad.app')).toBe(true)
+  })
+
   it('allows localhost', () => {
     expect(isAllowedAuthHost('localhost')).toBe(true)
     expect(isAllowedAuthHost('localhost:3000')).toBe(true)
