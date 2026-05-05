@@ -3,6 +3,9 @@
 # Apply migrations: supabase db push
 # Generate types: supabase gen types typescript --linked > src/lib/supabase/database.types.ts
 
+# =============================================================================
+# API
+# =============================================================================
 [api]
 enabled = true
 port = 54321
@@ -10,42 +13,110 @@ schemas = ["public", "graphql_public"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
+# =============================================================================
+# Database
+# =============================================================================
 [db]
 port = 54322
 shadow_port = 54320
 major_version = 17
 
+# =============================================================================
+# Studio (local dashboard)
+# =============================================================================
 [studio]
 enabled = true
 port = 54323
 
+# =============================================================================
+# Inbucket (local email server for dev)
+# =============================================================================
+# In development, all auth emails (magic links, confirmations) are captured by
+# Inbucket instead of being sent via Resend.
+#
+# Access Inbucket at: http://localhost:54324
+#
+# Workflow for local magic link testing:
+#   1. supabase start
+#   2. Visit http://localhost:3000/auth/login
+#   3. Enter any email and submit
+#   4. Open http://localhost:54324 -- find the email in the inbox
+#   5. Click the magic link in the email
+#   6. Redirected to /feed
+#
+# No RESEND_API_KEY is needed for local development.
 [inbucket]
 enabled = true
 port = 54324
+smtp_port = 54325
+pop3_port = 54326
 
+# =============================================================================
+# Storage
+# =============================================================================
 [storage]
 enabled = false
 # Not used in phase 1
 
+# =============================================================================
+# Auth
+# =============================================================================
 [auth]
 enabled = true
+
+# Site URL -- must match NEXT_PUBLIC_SITE_URL in .env.local
 site_url = "http://localhost:3000"
-additional_redirect_urls = []
+
+# Additional redirect URLs allowed after auth callback.
+# Production URLs are configured in the Supabase Dashboard (not via CLI),
+# as they depend on Vercel deployment URLs which change per branch.
+# For local dev, /auth/callback is automatically allowed by Supabase CLI.
+additional_redirect_urls = [
+  "http://localhost:3000/auth/callback",
+]
+
+# JWT expiry (seconds) -- 1 hour, matches magic link OTP expiry
 jwt_expiry = 3600
+
+# Session management
 enable_refresh_token_rotation = true
 refresh_token_reuse_interval = 10
+
+# Signup -- enabled (we want users to register)
 enable_signup = true
+
+# Anonymous logins -- disabled (we use magic links only, no anonymous sessions)
 enable_anonymous_sign_ins = false
 
+# =============================================================================
+# Auth -- Email settings
+# =============================================================================
 [auth.email]
 enable_signup = true
-double_confirm_changes = true
-enable_confirmations = true
-# Magic link: token expires after 1 hour (phase 1: magic links only)
 
+# Require email confirmation before user can sign in
+# With magic links: the link click IS the confirmation (implicit confirm)
+enable_confirmations = false
+
+# Require confirmation of new email address when user changes email
+double_confirm_changes = true
+
+# Secure email change -- requires old email confirmation before accepting new one
+secure_email_change = true
+
+# Magic link OTP expiry -- 1 hour (3600 seconds)
+# This must match mailer_otp_exp in the SMTP config (scripts/setup-supabase-smtp.ts)
+max_frequency = "1s"
+
+# =============================================================================
+# Auth -- SMS (disabled -- magic links only)
+# =============================================================================
 [auth.sms]
 enable_signup = false
 enable_confirmations = false
 
+# =============================================================================
+# Analytics
+# =============================================================================
 [analytics]
 enabled = false
