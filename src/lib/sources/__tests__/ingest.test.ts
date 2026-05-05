@@ -17,7 +17,6 @@ import { readFileSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { runIngestion } from '../ingest'
-import { RateLimitError } from '../http'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -180,9 +179,7 @@ describe('runIngestion()', () => {
   })
 
   it('continues with other adapters when one gets RateLimitError', async () => {
-    let callCount = 0
     vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
-      callCount++
       if (url.includes('remoteok.com')) {
         // Simulate 429
         return Promise.resolve(new Response('', {

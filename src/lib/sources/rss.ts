@@ -53,8 +53,6 @@ interface RssRoot {
 // Date parsing
 // ---------------------------------------------------------------------------
 
-const RFC822_PATTERN = /^[A-Z][a-z]{2},\s/
-
 /**
  * Parse a date string from RSS pubDate.
  * Accepts: RFC822 ("Thu, 01 May 2026 00:00:00 +0000") and ISO 8601.

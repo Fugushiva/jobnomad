@@ -6,8 +6,8 @@
  *   200, 304, 429+Retry-After, timeout abort, retry exponential, 5xx, 4xx no-retry
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { guardedFetch, RateLimitError, HttpError, TimeoutError, USER_AGENT } from '../http'
+import { describe, it, expect, vi, afterEach } from 'vitest'
+import { guardedFetch, RateLimitError, HttpError, USER_AGENT } from '../http'
 import type { Logger } from '../types'
 
 // ---------------------------------------------------------------------------
