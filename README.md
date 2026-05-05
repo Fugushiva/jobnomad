@@ -61,7 +61,7 @@ Ouvre [http://localhost:3000](http://localhost:3000).
 
 ## Variables d'environnement
 
-Crée un fichier `.env.local` à la racine :
+Crée un fichier `.env.local` à la racine (copier depuis `.env.example`) :
 
 ```env
 # Supabase — Project Settings > API
@@ -71,12 +71,19 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 # Supabase — Project Settings > API > service_role (serveur uniquement)
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
 
+# Supabase — pour le script smtp:setup uniquement (pas en runtime app)
+SUPABASE_PROJECT_REF=<20-lowercase-letters>
+SUPABASE_ACCESS_TOKEN=sbp_...
+
+# Email — expéditeur des magic links (domaine vérifié dans Resend)
+# En dev local : laisser vide — Supabase CLI utilise Inbucket
+RESEND_API_KEY=re_...
+EMAIL_FROM_ADDRESS=auth@jobnomad.app
+EMAIL_FROM_NAME=JobNomad
+
 # Stripe — Dashboard > Developers > API keys
 STRIPE_SECRET_KEY=sk_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...
-
-# Resend — resend.com > API Keys
-RESEND_API_KEY=re_...
 
 # Google AI — aistudio.google.com
 GEMINI_API_KEY=AIza...
@@ -86,9 +93,16 @@ OPENAI_API_KEY=sk-proj-...
 
 # Vercel Cron — générer avec: openssl rand -hex 32
 CRON_SECRET=<chaine-aleatoire-32-chars>
+
+# Rate limiting — générer avec: openssl rand -hex 16
+RATE_LIMIT_PEPPER=<chaine-aleatoire-16-chars>
 ```
 
-> `NEXT_PUBLIC_*` sont exposés au navigateur. Ne jamais y mettre `SUPABASE_SERVICE_ROLE_KEY` ni les clés API IA/Stripe.
+> `NEXT_PUBLIC_*` sont exposés au navigateur. Ne jamais y mettre `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, ni les clés API IA/Stripe.
+>
+> `SUPABASE_ACCESS_TOKEN` est uniquement pour le script de setup SMTP — ne jamais l'ajouter dans Vercel runtime env vars.
+
+Pour le setup complet de Resend + SMTP en production, voir [`docs/auth-setup.md`](docs/auth-setup.md).
 
 ## Scripts disponibles
 
@@ -103,6 +117,11 @@ npm run test:watch   # Tests unitaires en mode watch
 npm run test:e2e     # Tests E2E (Playwright)
 npm run test:e2e:ui  # Tests E2E avec UI interactive
 npm run test:all     # Unitaires + E2E
+
+# SMTP Resend — configuration Supabase Auth
+npm run smtp:dry     # Preview du payload SMTP (dry-run, aucun appel API)
+npm run smtp:setup   # Applique la config SMTP Resend sur Supabase (idempotent)
+npm run smtp:verify  # Lit la config SMTP actuelle (audit, détecte la dérive)
 ```
 
 ## CI/CD
@@ -145,14 +164,20 @@ jobnomad/
 │   └── utils.ts                # cn() (classnames merge)
 ├── src/
 │   └── lib/                    # (Supabase clients, future: business logic)
+├── scripts/                    # Scripts de setup et maintenance
+│   ├── setup-supabase-smtp.ts  # Config SMTP Resend via Management API
+│   └── __tests__/              # Tests du script SMTP
 ├── supabase/
-│   ├── migrations/             # 17 migrations SQL versionnées
+│   ├── migrations/             # Migrations SQL versionnées
+│   ├── templates/              # Templates email (magic-link, confirm-signup, recovery)
 │   ├── tests/                  # Tests RLS + smoke tests fonctions SQL
 │   ├── seed.sql                # Données de dev local
-│   └── config.toml
+│   └── config.toml             # Config Supabase CLI (Inbucket, auth, redirects)
 ├── e2e/                        # Tests Playwright E2E
-│   ├── a11y.spec.ts            # 15 tests accessibilité
-│   └── toast.spec.ts           # 11 tests toast (rendu, dismiss, responsive, a11y)
+│   ├── a11y.spec.ts            # Tests accessibilité
+│   ├── auth.spec.ts            # Tests auth flow complet
+│   ├── auth-smtp-health.spec.ts# Smoke test SMTP (opt-in, SMTP_HEALTH_TEST=1)
+│   └── toast.spec.ts           # Tests toast (rendu, dismiss, responsive, a11y)
 ├── docs/
 │   ├── db-schema.md            # ERD, politique de rétention, décisions archi
 │   ├── ui.md                   # Guide des composants shadcn/ui
@@ -166,7 +191,7 @@ jobnomad/
 - **`docs/db-schema.md`** — ERD complet, politique de rétention des données, décisions architecturales
 - **`docs/ui.md`** — Guide des composants shadcn/ui et design system (tokens, accessibility)
 - **`docs/ci-cd.md`** — Runbook complet : secrets, rotation CRON_SECRET, debugging, variables Vercel
-- **`docs/auth-setup.md`** — Configuration Supabase Auth (magic links)
+- **`docs/auth-setup.md`** — Runbook complet : Resend SMTP, magic links, Inbucket dev, checklist prod, rotation clés
 - **`docs/runbook-ingestion.md`** — Runbook pipeline ingestion : health check, trigger manuel, disable source, diagnostics
 - **`docs/adr/ADR-007-multi-source-mvp.md`** — Decision: 3 sources en phase 1 MVP
 
