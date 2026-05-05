@@ -14,6 +14,14 @@
  *   - Theme toggle (dark/light/system) -- loaded client-only to avoid hydration mismatch
  *   - Keyboard navigable: Tab through all interactive elements
  *
+ * Logout:
+ *   The "Sign out" button invokes the `signOut` Server Action via a <form>.
+ *   This is the only secure pattern for logout in Next.js App Router:
+ *     - Server Action → CSRF-protected automatically (POST + origin check).
+ *     - Session invalidated on the Supabase server (not just cookie-cleared).
+ *     - No client-side fetch or router.push() needed.
+ *   See src/lib/auth/actions.ts for the full security contract.
+ *
  * @example
  *   <Header variant="public" />
  *   <Header variant="app" userEmail="user@example.com" />
@@ -22,7 +30,7 @@
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { useState } from 'react'
-import { Menu } from 'lucide-react'
+import { Menu, LogOut } from 'lucide-react'
 
 import { Logo } from '@/components/brand/logo'
 import { Button } from '@/components/ui/button'
@@ -37,6 +45,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
+import { signOut } from '@/src/lib/auth/actions'
 
 /**
  * ThemeToggle is loaded with ssr:false to prevent hydration mismatch.
@@ -76,8 +85,23 @@ const NAV_LINKS_APP = [
   { href: '/saved', label: 'Saved' },
 ]
 
-function UserMenu({ email }: { email: string }) {
-  const initials = email.slice(0, 2).toUpperCase()
+/**
+ * UserMenu — desktop avatar dropdown for authenticated users.
+ *
+ * Exported for unit testing purposes (allows testing in isolation without
+ * the full Header, including Radix portal interactions).
+ *
+ * The logout form uses a Server Action (`action={signOut}`) which is the
+ * correct Next.js 16 App Router pattern. Passing a Server Action reference
+ * from a Client Component to a <form action> is explicitly supported and
+ * safe — Next.js serializes the action reference and the request is always
+ * POST, CSRF-protected by the framework.
+ */
+export function UserMenu({ email }: { email: string }) {
+  // Use first two characters of the email local part for initials.
+  // If the email has a single character before @, we use that character twice.
+  const localPart = email.split('@')[0] ?? email
+  const initials = localPart.slice(0, 2).toUpperCase()
 
   return (
     <DropdownMenu>
@@ -103,9 +127,14 @@ function UserMenu({ email }: { email: string }) {
           <Link href="/settings">Settings</Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
+        {/* Sign out via Server Action — CSRF-safe, session invalidated server-side */}
         <DropdownMenuItem asChild>
-          <form action="/auth/signout" method="POST" className="w-full">
-            <button type="submit" className="w-full text-left text-danger">
+          <form action={signOut} className="w-full">
+            <button
+              type="submit"
+              className="flex w-full items-center gap-2 text-left text-danger"
+            >
+              <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" />
               Sign out
             </button>
           </form>
@@ -231,11 +260,13 @@ export function Header({ variant = 'public', userEmail, className }: HeaderProps
                     >
                       Settings
                     </Link>
-                    <form action="/auth/signout" method="POST" className="mt-1">
+                    {/* Sign out via Server Action — CSRF-safe, session invalidated server-side */}
+                    <form action={signOut} className="mt-1">
                       <button
                         type="submit"
-                        className="w-full text-left text-label-md px-3 py-2 rounded-md text-danger transition-colors hover:bg-danger-soft"
+                        className="flex w-full items-center gap-2 text-left text-label-md px-3 py-2 rounded-md text-danger transition-colors hover:bg-danger-soft"
                       >
+                        <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" />
                         Sign out
                       </button>
                     </form>

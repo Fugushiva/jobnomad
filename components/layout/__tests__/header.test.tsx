@@ -1,5 +1,15 @@
 /**
- * Header component tests -- a11y + navigation
+ * Header component tests -- a11y + navigation + logout
+ *
+ * Scope:
+ *   - Public variant: CTAs, nav links, mobile trigger
+ *   - App variant: user menu trigger, avatar, nav links, conditional rendering
+ *   - Accessibility landmarks
+ *
+ * Note: Logout button security tests (form structure, icon, CSRF protection)
+ * live in user-menu.test.tsx where UserMenu is rendered in isolation. This
+ * avoids Radix UI portal issues in happy-dom (portals require async pointer
+ * events that happy-dom doesn't simulate synchronously).
  */
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen, cleanup } from '@testing-library/react'
@@ -28,18 +38,32 @@ vi.mock('@/components/brand/logo', () => ({
 // toggle renders in the Vitest environment (no SSR boundary here).
 vi.mock('next/dynamic', () => ({
   default: (loader: () => Promise<{ ThemeToggle: React.ComponentType }>) => {
-    // Resolve the module synchronously in test context
     let Comp: React.ComponentType | null = null
     loader().then((m) => { Comp = m.ThemeToggle })
     return function DynamicThemeToggle(props: object) {
-      if (!Comp) {
-        return <div className="h-9 w-9" aria-hidden="true" />
-      }
+      if (!Comp) return <div className="h-9 w-9" aria-hidden="true" />
       const C = Comp
       return <C {...props} />
     }
   },
 }))
+
+/**
+ * Mock the signOut Server Action.
+ *
+ * Server Actions are imported at the module level in header.tsx. We mock the
+ * entire module so the Client Component can import it without requiring a
+ * Node.js server runtime. The mock is a no-op — we only care that the form
+ * wires it correctly, not that it actually signs the user out (that is tested
+ * separately in src/lib/auth/__tests__/signout.test.ts).
+ */
+vi.mock('@/src/lib/auth/actions', () => ({
+  signOut: vi.fn(),
+}))
+
+// ---------------------------------------------------------------------------
+// Public variant
+// ---------------------------------------------------------------------------
 
 describe('Header -- public variant', () => {
   it('renders skip-link targeting #main', () => {
@@ -74,6 +98,10 @@ describe('Header -- public variant', () => {
   })
 })
 
+// ---------------------------------------------------------------------------
+// App variant
+// ---------------------------------------------------------------------------
+
 describe('Header -- app variant', () => {
   it('renders Feed nav link', () => {
     render(<Header variant="app" userEmail="test@example.com" />)
@@ -87,7 +115,7 @@ describe('Header -- app variant', () => {
     expect(savedLinks.length).toBeGreaterThanOrEqual(1)
   })
 
-  it('renders user avatar menu with accessible label', () => {
+  it('renders user avatar menu trigger with accessible label', () => {
     render(<Header variant="app" userEmail="user@example.com" />)
     const userMenu = screen.getByRole('button', { name: /user menu for user@example.com/i })
     expect(userMenu).not.toBeNull()
@@ -98,7 +126,29 @@ describe('Header -- app variant', () => {
     expect(screen.queryByRole('link', { name: /sign in/i })).toBeNull()
     expect(screen.queryByRole('link', { name: /get started/i })).toBeNull()
   })
+
+  it('avatar shows initials derived from email local part', () => {
+    render(<Header variant="app" userEmail="alice@example.com" />)
+    // "alice" -> slice(0,2).toUpperCase() = "AL"
+    expect(screen.getByText('AL')).not.toBeNull()
+  })
+
+  it('avatar initials are uppercase', () => {
+    render(<Header variant="app" userEmail="bob@example.com" />)
+    const initialsEl = screen.getByText('BO')
+    expect(initialsEl.textContent).toBe('BO')
+  })
+
+  it('does not render UserMenu when userEmail is absent in app variant', () => {
+    render(<Header variant="app" />)
+    // No avatar trigger rendered without email
+    expect(screen.queryByRole('button', { name: /user menu/i })).toBeNull()
+  })
 })
+
+// ---------------------------------------------------------------------------
+// Accessibility
+// ---------------------------------------------------------------------------
 
 describe('Header -- accessibility', () => {
   it('has a <header> landmark element', () => {
