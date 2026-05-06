@@ -418,6 +418,75 @@ La progression est déduite des champs déjà remplis dans `user_profiles` (pas 
 | E2E (Playwright) | `e2e/onboarding.spec.ts` | Auth guards, XSS, redirect chains, no 500 |
 | pgTAP (SQL) | `supabase/tests/rls_user_profiles.sql` | Isolation utilisateur + onboarding upsert pattern (7 assertions) |
 
+## Feed (FM05)
+
+Le feed est la page centrale du produit. Il liste les offres actives triées par `posted_at DESC` (Phase 1 — sans scoring IA).
+
+### Architecture
+
+```
+app/(protected)/feed/page.tsx          Server Component — fetch + guards
+  src/lib/feed/queries.ts              Query builder SQL direct (pas de RPC)
+  src/lib/feed/schemas.ts              Zod validation des query params
+  components/feed/JobFeedList.tsx      Liste JobCard + pagination Previous/Next
+  components/feed/FeedFilters.tsx      Panneau filtres (sidebar desktop / Sheet mobile)
+  components/feed/FeedSkeleton.tsx     Skeleton de chargement (existant)
+  components/jobs/JobCard.tsx          Carte offre (variante 'feed')
+```
+
+### Requête Phase 1
+
+```sql
+SELECT id, title, company, logo_url, source_url, source,
+       skills_required, salary_min, salary_max, salary_currency, salary_period,
+       contract_type, geo_policy, seniority, red_flags, posted_at, ingested_at
+FROM jobs
+WHERE status = 'active'
+ORDER BY posted_at DESC, ingested_at DESC
+LIMIT 20 OFFSET :offset
+```
+
+### Filtres permissifs (NULL-tolerant)
+
+Les colonnes IA (`contract_type`, `seniority`, `geo_policy`, `salary_min`) peuvent être NULL. Un job NULL passe tous les filtres :
+
+```sql
+WHERE (contract_type = 'contractor' OR contract_type IS NULL)
+```
+
+Filtres disponibles : contract type · seniority · location policy · minimum salary (preset).
+
+### Guards
+
+| Condition | Comportement |
+|---|---|
+| Non authentifié | Redirect → `/auth/login` |
+| `onboarding_completed_at IS NULL` | Redirect → `/onboarding` |
+| DB vide | EmptyState "check back once cron has run" |
+| Filtres sans résultat | EmptyState "no jobs match filters" |
+| Erreur DB | Inline error + lien Refresh |
+
+### Pagination
+
+20 offres par page via `?page=N`. Les filtres sont persistés dans l'URL — le rechargement ou le partage de lien conserve les filtres.
+
+### Fichiers clés
+
+| Fichier | Rôle |
+|---|---|
+| `src/lib/feed/queries.ts` | `fetchFeedJobs(supabase, filters, page)` — retourne `{ jobs, total }` |
+| `src/lib/feed/schemas.ts` | `parseFeedFilters(rawParams)` — validation Zod, `.catch(undefined)` sur chaque champ |
+| `components/feed/job-feed-list.tsx` | Rendu liste + contrôles pagination (Server Component) |
+| `components/feed/feed-filters.tsx` | Filtres radio + select (Client Component, auto-submit onChange) |
+
+### Tests
+
+| Type | Fichier | Couverture |
+|---|---|---|
+| Unit (Vitest) | `src/lib/feed/__tests__/schemas.test.ts` | parseFeedFilters — valeurs valides, coercions, XSS, defaults |
+| Unit (Vitest) | `src/lib/feed/__tests__/queries.test.ts` | fetchFeedJobs — colonnes, filtres NULL, pagination, erreurs |
+| Unit (Vitest) | `components/feed/__tests__/feed-components.test.tsx` | JobFeedList (empty states, pagination) + FeedFilters (options, badges) |
+
 ## Navigation mobile
 
 Le `Header` affiche une navigation desktop (liens horizontaux) visible à partir du breakpoint `md` (768 px). En dessous, un drawer slide-in (bouton burger) prend le relais.
