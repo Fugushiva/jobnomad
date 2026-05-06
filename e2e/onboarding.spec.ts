@@ -38,7 +38,7 @@ test.describe('Onboarding — auth guards', () => {
   })
 
   test('/onboarding does not render a 500 error page', async ({ page }) => {
-    const response = await page.goto('/onboarding')
+    await page.goto('/onboarding')
     // redirect responses are 307 — but page.goto follows them
     // we should NOT land on a 500 page
     expect(page.url()).not.toContain('500')

@@ -141,7 +141,7 @@ describe('SkillsTagInput', () => {
 
   it('announces add/remove actions in sr-only live region', () => {
     const onChange = vi.fn()
-    const { rerender } = render(<SkillsTagInput value={[]} onChange={onChange} />)
+    render(<SkillsTagInput value={[]} onChange={onChange} />)
     const addGo = screen.getByRole('button', { name: /add go/i })
     fireEvent.click(addGo)
     // Live region exists
