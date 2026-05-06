@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
-import { User } from 'lucide-react'
+import { redirect } from 'next/navigation'
+import { getUserWithProfile } from '@/src/lib/auth/get-user'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { OnboardingWizard } from '@/components/onboarding/onboarding-wizard'
+import type { OnboardingStep } from '@/components/onboarding/onboarding-wizard'
 
 export const metadata: Metadata = {
   title: 'Complete your profile — JobNomad',
@@ -12,47 +12,80 @@ export const metadata: Metadata = {
 }
 
 /**
- * /onboarding — Profile setup page (stub).
+ * /onboarding — 4-step profile wizard (FM02).
  *
- * Refactored: uses Header, Footer, Card, Button, Lucide icon.
- * Full 4-step wizard implementation in a future issue (F-M03 spec).
+ * Server Component responsibilities:
+ *  1. Auth check (belt + braces on top of the layout guard)
+ *  2. If onboarding already complete → redirect /feed
+ *  3. Determine which step the user left off at (reprise)
+ *  4. Pass initial state to the client wizard
+ *
+ * Resume logic (no new DB column needed):
+ *  - No profile row / no timezone → step 1
+ *  - Timezone set, skills empty    → step 2
+ *  - Skills present                → step 3 (safe: contract step is fast to redo)
+ *  - contract_preference present   → step 4
+ *  - onboarding_completed_at set   → redirect /feed
  */
-export default function OnboardingPage() {
+export default async function OnboardingPage() {
+  const { user, profile } = await getUserWithProfile()
+
+  if (!user) redirect('/auth/login')
+  if (profile?.onboarding_completed_at) redirect('/feed')
+
+  const resumeStep = computeResumeStep(profile)
+
   return (
-    <div className="flex flex-col flex-1 bg-bg text-text">
-      <Header variant="app" />
+    <div className="flex min-h-screen flex-col bg-bg text-text">
+      <Header variant="app" userEmail={user.email} />
 
       <main
         id="main"
-        className="flex flex-col flex-1 items-center justify-center px-6 py-12"
+        className="flex flex-1 flex-col items-center justify-center px-4 py-12 sm:px-6"
       >
-        <Card className="w-full max-w-lg rounded-2xl shadow-md">
-          <CardHeader className="flex flex-col items-center text-center gap-4">
-            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-accent-soft">
-              <User className="h-7 w-7 text-accent" aria-hidden />
-            </div>
-            <div>
-              <h1 className="text-display-lg text-text">Complete your profile</h1>
-              <p className="text-body-lg text-text-soft mt-2">
-                Tell us about your skills, timezone, and preferences so we can
-                match you with the right remote roles.
-              </p>
-            </div>
-          </CardHeader>
-
-          <CardContent className="flex flex-col items-center gap-4 pt-0">
-            <p className="text-body-md text-text-muted text-center">
-              Profile setup form coming soon (4-step wizard).
+        <div className="w-full max-w-xl">
+          <div className="mb-8 text-center">
+            <h1 className="text-display-lg text-text">Set up your profile</h1>
+            <p className="mt-2 text-body-lg text-text-soft">
+              Takes less than 3 minutes. We only ask for what we need to match
+              you with the right remote jobs.
             </p>
+          </div>
 
-            <Button asChild>
-              <Link href="/feed">Go to feed</Link>
-            </Button>
-          </CardContent>
-        </Card>
+          <OnboardingWizard
+            initialStep={resumeStep}
+            initialProfile={{
+              timezone: profile?.timezone ?? null,
+              skills: profile?.skills as string[] | null,
+              contract_preference: profile?.contract_preference ?? null,
+              min_rate_usd: profile?.min_rate_usd ?? null,
+              rate_period: profile?.rate_period ?? null,
+            }}
+          />
+        </div>
       </main>
 
       <Footer variant="minimal" />
     </div>
   )
+}
+
+// ---------------------------------------------------------------------------
+// Resume step computation
+// ---------------------------------------------------------------------------
+function computeResumeStep(
+  profile: {
+    timezone?: string | null
+    skills?: unknown
+    contract_preference?: string | null
+  } | null
+): OnboardingStep {
+  if (!profile || !profile.timezone) return 1
+
+  const skillsArray = Array.isArray(profile.skills) ? profile.skills : []
+  if (skillsArray.length === 0) return 2
+
+  if (!profile.contract_preference) return 3
+
+  return 4
 }

@@ -353,6 +353,71 @@ app/auth/
 | Unit (Vitest) | `app/auth/error/__tests__/page.test.tsx` | Table-driven reason mapping, 3 security regression tests, nav CTAs, no inline styles |
 | E2E (Playwright) | `e2e/auth.spec.ts` | Login form, validation, magic link flow, error page messages, visual coherence (logo/h1/main), XSS guard, no inline styles |
 
+## Onboarding
+
+L'onboarding wizard (FM02) guide un nouvel utilisateur à travers 4 étapes pour configurer son profil avant d'accéder au feed.
+
+### Flux
+
+1. Connexion → redirect vers `/onboarding` si `onboarding_completed_at IS NULL`.
+2. Wizard 4 étapes : **Timezone → Skills → Contract → Rate**.
+3. À chaque étape validée, une Server Action upsert/update `user_profiles` (reprise possible si fermeture de l'onglet).
+4. `completeOnboarding()` pose `onboarding_completed_at = now()` → redirect `/feed`.
+5. `/feed` vérifie `onboarding_completed_at IS NOT NULL` → redirect `/onboarding` si incomplet.
+
+### Architecture
+
+```
+app/(protected)/onboarding/
+├── page.tsx              # Server Component — lit le profil, détermine l'étape de reprise
+├── actions.ts            # Server Actions : saveStep1, saveStep2, saveStep3, completeOnboarding
+└── _lib/
+    ├── schemas.ts        # Zod schemas par étape + completeProfileSchema
+    └── timezones.ts      # Liste APAC + getAllTimezones() (Intl.supportedValuesOf) + validation
+
+components/onboarding/
+├── onboarding-wizard.tsx # Client Component — state machine, useTransition, toastError
+├── step-indicator.tsx    # Barre de progression accessible (aria-current="step")
+├── timezone-select.tsx   # Combobox shadcn (APAC-first + full IANA search)
+├── skills-tag-input.tsx  # Multi-tag input (max 20, dédup, suggestions)
+├── contract-radio.tsx    # Radio cards visuels (contractor/employee/both)
+└── rate-input.tsx        # Montant + période (USD, optional)
+```
+
+### Logique de reprise
+
+La progression est déduite des champs déjà remplis dans `user_profiles` (pas de colonne step en DB) :
+
+| Condition | Étape de reprise |
+|---|---|
+| Pas de profil / pas de timezone | Étape 1 (Timezone) |
+| Timezone OK, skills vide | Étape 2 (Skills) |
+| Skills OK, pas de contract_preference | Étape 3 (Contract) |
+| Steps 1-3 OK | Étape 4 (Rate) |
+| `onboarding_completed_at IS NOT NULL` | Redirect → `/feed` |
+
+### Sécurité
+
+- `getUser()` au début de chaque Server Action — `user_id` vient de la session Supabase, jamais du client.
+- Validation Zod côté serveur obligatoire avant toute écriture (timezone IANA valide, skills HTML-sanitized, rate 0–1M).
+- Écriture via `createClient()` (contexte user) → RLS `user_profiles_update_own` s'applique.
+- `onboarding_completed_at` n'est posé que dans `completeOnboarding()`, jamais dans les actions d'étape.
+
+### Primitives shadcn ajoutées
+
+`radio-group`, `command`, `popover` (pour le Combobox timezone).
+
+### Tests
+
+| Type | Fichier | Couverture |
+|---|---|---|
+| Unit (Vitest) | `app/(protected)/onboarding/__tests__/schemas.test.ts` | Zod : 4 étapes + edge cases (IANA invalide, HTML injection, rate cross-field) |
+| Unit (Vitest) | `app/(protected)/onboarding/__tests__/timezones.test.ts` | isValidIANA, getAllTimezones, formatLabel, groupByRegion |
+| Unit (Vitest) | `app/(protected)/onboarding/__tests__/actions.test.ts` | saveStep1-3 + completeOnboarding avec mock Supabase |
+| Unit (Vitest) | `components/onboarding/__tests__/onboarding-components.test.tsx` | StepIndicator, SkillsTagInput, ContractRadio, RateInput |
+| E2E (Playwright) | `e2e/onboarding.spec.ts` | Auth guards, XSS, redirect chains, no 500 |
+| pgTAP (SQL) | `supabase/tests/rls_user_profiles.sql` | Isolation utilisateur + onboarding upsert pattern (7 assertions) |
+
 ## Navigation mobile
 
 Le `Header` affiche une navigation desktop (liens horizontaux) visible à partir du breakpoint `md` (768 px). En dessous, un drawer slide-in (bouton burger) prend le relais.

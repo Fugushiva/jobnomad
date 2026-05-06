@@ -87,7 +87,7 @@ test.describe('Error page', () => {
     await page.goto('/auth/error?reason=link_expired')
     await expect(page.getByRole('heading', { name: 'Link expired' })).toBeVisible()
     await expect(page.getByText('This magic link has expired')).toBeVisible()
-    await expect(page.getByRole('link', { name: /back to sign in/i })).toBeVisible()
+    await expect(page.getByRole('link', { name: /try again/i })).toBeVisible()
   })
 
   test('shows "Invalid link" for ?reason=missing_code', async ({ page }) => {
