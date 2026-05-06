@@ -44,14 +44,23 @@ export default async function FeedPage({
   const rawParams = await searchParams
   const filters = parseFeedFilters(rawParams)
 
-  // -- Fetch jobs ----------------------------------------------------------
+  // -- Fetch jobs + saved job IDs in parallel ------------------------------
   // We use the user-context client (row-level security active) so the
-  // `jobs_select_active` policy applies automatically.
+  // `jobs_select_active` policy and saved_jobs policies apply automatically.
   let feedResult: Awaited<ReturnType<typeof fetchFeedJobs>> | null = null
   let fetchError: string | null = null
+  let savedJobIds = new Set<string>()
 
   try {
-    feedResult = await fetchFeedJobs(userSupabase, filters, filters.page)
+    const [feedRes, savedRes] = await Promise.all([
+      fetchFeedJobs(userSupabase, filters, filters.page),
+      userSupabase
+        .from('saved_jobs')
+        .select('job_id')
+        .eq('user_id', user.id),
+    ])
+    feedResult = feedRes
+    savedJobIds = new Set((savedRes.data ?? []).map((r) => r.job_id))
   } catch (err) {
     console.error('[feed] fetch failed', err)
     fetchError = err instanceof Error ? err.message : 'Unknown error'
@@ -110,6 +119,7 @@ export default async function FeedPage({
                     total={feedResult?.total ?? 0}
                     page={filters.page}
                     filters={filters}
+                    savedJobIds={savedJobIds}
                   />
                 )}
               </div>

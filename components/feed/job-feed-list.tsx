@@ -16,6 +16,8 @@ import Link from 'next/link'
 import { Briefcase, ChevronLeft, ChevronRight } from 'lucide-react'
 import { JobCard } from '@/components/jobs/job-card'
 import { NotAnalyzedBadge } from '@/components/jobs/not-analyzed-badge'
+import { BookmarkButton } from '@/components/jobs/bookmark-button'
+import { ApplyButton } from '@/components/jobs/apply-button'
 import { EmptyState } from '@/components/states/empty-state'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -112,6 +114,8 @@ interface JobFeedListProps {
   total: number
   page: number
   filters: FeedFilters
+  /** Set of job UUIDs the current user has already bookmarked. */
+  savedJobIds?: Set<string>
   className?: string
 }
 
@@ -120,6 +124,7 @@ export function JobFeedList({
   total,
   page,
   filters,
+  savedJobIds = new Set(),
   className,
 }: JobFeedListProps) {
   const totalPages = Math.max(1, Math.ceil(total / FEED_PAGE_SIZE))
@@ -146,13 +151,32 @@ export function JobFeedList({
       <ol className="flex flex-col gap-3 list-none p-0 m-0">
         {jobs.map((job) => {
           const cardData = toJobCardData(job)
+          const isBookmarked = savedJobIds.has(job.id)
           return (
-            <li key={job.id}>
+            <li key={job.id} className="relative">
+              {/* Bookmark button — absolute top-right, overlays the card */}
+              <div className="absolute top-3 right-3 z-10">
+                <BookmarkButton jobId={job.id} isBookmarked={isBookmarked} />
+              </div>
+
               <JobCard job={cardData} variant="feed" />
+
               {/* Phase 1: show "Not analyzed" badge when red_flags is NULL */}
               {cardData.notAnalyzed && !cardData.redFlags && (
                 <div className="px-1 pt-1.5">
                   <NotAnalyzedBadge />
+                </div>
+              )}
+
+              {/* Apply button row (only if source_url available) */}
+              {job.source_url && (
+                <div className="mt-1 flex justify-end px-1">
+                  <ApplyButton
+                    jobId={job.id}
+                    applyUrl={job.source_url}
+                    title={job.title}
+                    company={job.company}
+                  />
                 </div>
               )}
             </li>
