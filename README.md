@@ -501,6 +501,65 @@ Le champ `jobs.red_flags` est un tableau JSON. En Phase 1, il est `NULL` (pas en
 - `components/jobs/not-analyzed-badge.tsx` — badge secondaire gris, variant `secondary`, icône Clock
 - `components/jobs/red-flag-badge.tsx` — badge coral `red-flag`, icône AlertTriangle (existant depuis issue #16)
 
+## Bookmarks & tracking postulation (FM08 + FM09)
+
+### Sauvegarde d'offres (Bookmarks)
+
+Un utilisateur peut sauvegarder des offres depuis le feed, les retrouver sur `/saved`, et changer leur statut (candidature en cours, refus, etc.).
+
+**Flux** :
+1. `BookmarkButton` (Client Component, `useOptimistic`) sur chaque JobCard du feed.
+2. Clic → `saveJob(jobId)` ou `unsaveJob(jobId)` Server Action → INSERT/DELETE `saved_jobs`.
+3. `/saved` : liste triée par date, statut sélectionnable, bouton Postuler.
+4. Changement de statut → `updateSavedJobStatus(jobId, status)` Server Action.
+
+**Statuts disponibles** : `saved` · `applied` · `rejected` · `interviewing` · `offered`
+
+### Architecture
+
+```
+app/(protected)/saved/
+├── page.tsx              # Server Component — fetch saved_jobs JOIN jobs
+└── actions.ts            # saveJob, unsaveJob, updateSavedJobStatus
+
+components/jobs/
+├── bookmark-button.tsx   # Client Component — useOptimistic + saveJob/unsaveJob SA
+├── apply-button.tsx      # Client Component — lien nouvel onglet + sendBeacon
+└── saved-job-list.tsx    # Client Component — liste /saved avec select statut
+
+app/api/jobs/[id]/track-apply/
+└── route.ts              # POST → INSERT job_views action='click_apply' (204 No Content)
+
+components/feed/
+└── job-feed-list.tsx     # Reçoit savedJobIds (Set<string>) du SC, passe isBookmarked au BookmarkButton
+```
+
+### Tracking postulation
+
+Le clic sur "Apply" (depuis le feed ou `/saved`) :
+1. Ouvre `source_url` dans un nouvel onglet.
+2. Envoie `navigator.sendBeacon('/api/jobs/[id]/track-apply')` (fire-and-forget, fonctionnel même si la page se décharge).
+3. Le route handler insère `job_views { action: 'click_apply' }`.
+
+Pas de PostHog en Phase 1 — `job_views` est la seule source de tracking.
+
+### Sécurité
+
+- `getUser()` en début de chaque Server Action et du route handler — jamais de `user_id` client.
+- Validation Zod (UUID) sur `jobId` et enum sur `status`.
+- Écriture via `createClient()` (contexte user) → RLS s'applique.
+- Route handler : 401 si non authentifié, 400 si UUID invalide, 204 si succès.
+- `job_views` = audit records immuables : pas de politique UPDATE/DELETE dans les migrations.
+
+### Tests
+
+| Type | Fichier | Couverture |
+|---|---|---|
+| Unit (Vitest) | `app/(protected)/saved/__tests__/actions.test.ts` | saveJob, unsaveJob, updateSavedJobStatus — auth, Zod, DB errors, revalidatePath |
+| Unit (Vitest) | `components/jobs/__tests__/bookmark-apply.test.tsx` | BookmarkButton (aria, optimistic, toastError), ApplyButton (href, target, sendBeacon) |
+| Unit (Vitest) | `app/api/jobs/[id]/track-apply/__tests__/route.test.ts` | 401/400/204/500 — auth, UUID, insert, DB error |
+| pgTAP (SQL) | `supabase/tests/rls_job_views.sql` | Isolation SELECT/INSERT, cross-user DELETE impossible, aucune policy UPDATE/DELETE (5 assertions) |
+
 ## Navigation mobile
 
 Le `Header` affiche une navigation desktop (liens horizontaux) visible à partir du breakpoint `md` (768 px). En dessous, un drawer slide-in (bouton burger) prend le relais.
