@@ -343,7 +343,7 @@ Ces points sont volontairement reportés :
 
 À mesure que les tâches avancent, mettre à jour le statut ici :
 
-- [ ] Tâche 1 — Onboarding wizard
+- [x] Tâche 1 — Onboarding wizard (issue #8 — branche 8-fm02-onboarding-profil-en-4-etapes-timezone-skills-contrat-taux)
 - [ ] Tâche 2 — Feed réel
 - [x] Tâche 3 — Polish auth pages
 - [ ] Tâche 4 — Landing v2
