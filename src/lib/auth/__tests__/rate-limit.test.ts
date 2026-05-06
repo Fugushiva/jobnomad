@@ -4,7 +4,7 @@
  * checkRateLimit is tested in integration tests (requires Supabase RPC).
  * Here we test hashIp and extractClientIp which are pure.
  */
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { hashIp, extractClientIp } from '../rate-limit'
 
 // ---------------------------------------------------------------------------
@@ -39,6 +39,42 @@ describe('hashIp', () => {
     // Should not throw even without explicit pepper
     const hash = hashIp('192.168.1.1')
     expect(hash).toMatch(/^[a-f0-9]{64}$/)
+  })
+
+  // -------------------------------------------------------------------------
+  // Production safety: must reject default/missing peppers in NODE_ENV=production
+  // (Audit fix — prevents predictable IP-hash rainbow tables.)
+  // -------------------------------------------------------------------------
+
+  describe('production guard', () => {
+    beforeEach(() => {
+      vi.stubEnv('NODE_ENV', 'production')
+    })
+
+    afterEach(() => {
+      vi.unstubAllEnvs()
+    })
+
+    it('throws when RATE_LIMIT_PEPPER is unset in production', () => {
+      vi.stubEnv('RATE_LIMIT_PEPPER', '')
+      expect(() => hashIp('1.2.3.4')).toThrow(/RATE_LIMIT_PEPPER/)
+    })
+
+    it('throws when RATE_LIMIT_PEPPER equals the dev default', () => {
+      vi.stubEnv('RATE_LIMIT_PEPPER', 'jobnomad-dev-pepper-change-me')
+      expect(() => hashIp('1.2.3.4')).toThrow(/RATE_LIMIT_PEPPER/)
+    })
+
+    it('throws when RATE_LIMIT_PEPPER equals the legacy short dev default', () => {
+      vi.stubEnv('RATE_LIMIT_PEPPER', 'jobnomad-dev-pepper')
+      expect(() => hashIp('1.2.3.4')).toThrow(/RATE_LIMIT_PEPPER/)
+    })
+
+    it('accepts a real pepper in production', () => {
+      vi.stubEnv('RATE_LIMIT_PEPPER', 'a'.repeat(64))
+      const hash = hashIp('1.2.3.4')
+      expect(hash).toMatch(/^[a-f0-9]{64}$/)
+    })
   })
 })
 

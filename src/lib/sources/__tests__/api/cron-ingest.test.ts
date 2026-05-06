@@ -172,7 +172,11 @@ describe('GET /api/cron/ingest', () => {
     expect(response.status).toBe(500)
     const body = await response.json()
     expect(body.error).toBe('Ingestion failed')
-    expect(body.details).toContain('DB exploded')
+    expect(body.runId).toEqual(expect.any(String))
+    // Security: the raw error message must NOT leak in the HTTP response.
+    // Full error is persisted to cron_runs.error_message + structured logs.
+    expect(body.details).toBeUndefined()
+    expect(JSON.stringify(body)).not.toContain('DB exploded')
   })
 
   it('returns status=timeout when deadlineHit=true', async () => {

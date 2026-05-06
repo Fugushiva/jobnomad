@@ -234,7 +234,11 @@ describe('GET /api/cron/cleanup', () => {
     expect(response.status).toBe(500)
     const body = await response.json()
     expect(body.error).toBe('Cleanup failed')
-    expect(body.details).toContain('DB exploded')
+    expect(body.runId).toEqual(expect.any(String))
+    // Security: the raw error message must NOT leak in the HTTP response.
+    // Full error is persisted to cron_runs.error_message + structured logs.
+    expect(body.details).toBeUndefined()
+    expect(JSON.stringify(body)).not.toContain('DB exploded')
   })
 
   it('sets cron_runs.status="failed" when runCleanup throws', async () => {
