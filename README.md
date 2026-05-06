@@ -485,7 +485,21 @@ Filtres disponibles : contract type · seniority · location policy · minimum s
 |---|---|---|
 | Unit (Vitest) | `src/lib/feed/__tests__/schemas.test.ts` | parseFeedFilters — valeurs valides, coercions, XSS, defaults |
 | Unit (Vitest) | `src/lib/feed/__tests__/queries.test.ts` | fetchFeedJobs — colonnes, filtres NULL, pagination, erreurs |
-| Unit (Vitest) | `components/feed/__tests__/feed-components.test.tsx` | JobFeedList (empty states, pagination) + FeedFilters (options, badges) |
+| Unit (Vitest) | `components/feed/__tests__/feed-components.test.tsx` | JobFeedList (empty states, pagination, not-analyzed badge) + FeedFilters (options, badges) |
+| Unit (Vitest) | `components/jobs/__tests__/not-analyzed-badge.test.tsx` | NotAnalyzedBadge — rendu, label aria, title, icône |
+
+### Red flags (FM06)
+
+Le champ `jobs.red_flags` est un tableau JSON. En Phase 1, il est `NULL` (pas encore analysé par le pipeline IA).
+
+| État de `red_flags` | Affichage sur la JobCard |
+|---|---|
+| `NULL` (Phase 1) | Badge gris "Not analyzed" discret (horloge) |
+| `[]` (analysé, aucun flag) | Rien (job propre) |
+| `["raison 1", "raison 2"]` (Phase 2) | Badges rouges `RedFlagBadge` par flag |
+
+- `components/jobs/not-analyzed-badge.tsx` — badge secondaire gris, variant `secondary`, icône Clock
+- `components/jobs/red-flag-badge.tsx` — badge coral `red-flag`, icône AlertTriangle (existant depuis issue #16)
 
 ## Navigation mobile
 

@@ -7,8 +7,8 @@
  * No jest-dom — use .not.toBeNull() / .not.toBeUndefined() etc.
  */
 
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect, vi, afterEach } from 'vitest'
+import { render, screen, cleanup } from '@testing-library/react'
 import { JobFeedList } from '../job-feed-list'
 import { FeedFilters } from '../feed-filters'
 import type { FeedJob } from '@/src/lib/feed/queries'
@@ -21,6 +21,8 @@ import type { FeedFilters as FeedFiltersType } from '@/src/lib/feed/schemas'
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
 }))
+
+afterEach(() => cleanup())
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -164,6 +166,34 @@ describe('JobFeedList', () => {
         <JobFeedList jobs={[job]} total={1} page={1} filters={defaultFilters} />,
       ),
     ).not.toThrow()
+  })
+
+  it('shows "Not analyzed" badge when red_flags is null', () => {
+    const job = makeJob({ red_flags: null as unknown as [] })
+    render(
+      <JobFeedList jobs={[job]} total={1} page={1} filters={defaultFilters} />,
+    )
+    const badges = screen.getAllByText('Not analyzed')
+    expect(badges.length).toBeGreaterThan(0)
+  })
+
+  it('does NOT show "Not analyzed" badge when red_flags is a non-empty array', () => {
+    const job = makeJob({ red_flags: ['Unpaid trial'] })
+    render(
+      <JobFeedList jobs={[job]} total={1} page={1} filters={defaultFilters} />,
+    )
+    // Badge should not appear (job has been analyzed)
+    const badges = screen.queryAllByText('Not analyzed')
+    expect(badges.length).toBe(0)
+  })
+
+  it('does NOT show "Not analyzed" badge when red_flags is empty array (analyzed, no flags)', () => {
+    const job = makeJob({ red_flags: [] })
+    render(
+      <JobFeedList jobs={[job]} total={1} page={1} filters={defaultFilters} />,
+    )
+    const badges = screen.queryAllByText('Not analyzed')
+    expect(badges.length).toBe(0)
   })
 
   it('renders salary when both min and max present', () => {

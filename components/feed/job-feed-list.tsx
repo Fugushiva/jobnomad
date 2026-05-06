@@ -15,6 +15,7 @@
 import Link from 'next/link'
 import { Briefcase, ChevronLeft, ChevronRight } from 'lucide-react'
 import { JobCard } from '@/components/jobs/job-card'
+import { NotAnalyzedBadge } from '@/components/jobs/not-analyzed-badge'
 import { EmptyState } from '@/components/states/empty-state'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -49,11 +50,17 @@ function toJobCardData(job: FeedJob) {
   }
 
   // Parse red_flags — permissive: ignore if not array
+  // notAnalyzed = true when red_flags is NULL or an empty array (Phase 1)
   let redFlags: { reason: string }[] = []
+  let notAnalyzed = true
   if (Array.isArray(job.red_flags)) {
     redFlags = (job.red_flags as unknown[])
       .filter((f): f is string => typeof f === 'string')
       .map((reason) => ({ reason }))
+    // If the array exists (even empty), the field was set by extraction
+    // A non-null empty array means "analyzed, no flags found" — not "not analyzed"
+    // A null means "not yet processed by the AI pipeline" (Phase 1 default)
+    notAnalyzed = job.red_flags === null
   }
 
   // Format posted_at relative to today
@@ -78,6 +85,7 @@ function toJobCardData(job: FeedJob) {
     type: job.contract_type as 'contractor' | 'full-time' | undefined,
     tags: job.skills_required.slice(0, 6), // cap displayed tags
     redFlags: redFlags.length > 0 ? redFlags : undefined,
+    notAnalyzed,
   }
 }
 
@@ -136,11 +144,20 @@ export function JobFeedList({
     <section aria-label="Job listings" className={cn('flex flex-col gap-4', className)}>
       {/* -- Job cards ------------------------------------------------------- */}
       <ol className="flex flex-col gap-3 list-none p-0 m-0">
-        {jobs.map((job) => (
-          <li key={job.id}>
-            <JobCard job={toJobCardData(job)} variant="feed" />
-          </li>
-        ))}
+        {jobs.map((job) => {
+          const cardData = toJobCardData(job)
+          return (
+            <li key={job.id}>
+              <JobCard job={cardData} variant="feed" />
+              {/* Phase 1: show "Not analyzed" badge when red_flags is NULL */}
+              {cardData.notAnalyzed && !cardData.redFlags && (
+                <div className="px-1 pt-1.5">
+                  <NotAnalyzedBadge />
+                </div>
+              )}
+            </li>
+          )
+        })}
       </ol>
 
       {/* -- Pagination controls --------------------------------------------- */}
