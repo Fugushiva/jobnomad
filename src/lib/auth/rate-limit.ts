@@ -14,12 +14,36 @@ import crypto from 'node:crypto'
 // ---------------------------------------------------------------------------
 
 /**
+ * Known dev/test default values that MUST NOT be used in production.
+ * Keep in sync with the Zod default in `src/lib/env.ts`.
+ */
+const DEV_PEPPER_DEFAULTS: ReadonlySet<string> = new Set([
+  'jobnomad-dev-pepper',
+  'jobnomad-dev-pepper-change-me',
+])
+
+/**
  * Hash an IP address with a pepper for storage.
  * Uses SHA-256 which is fast enough for rate-limiting lookups
  * and provides sufficient collision resistance.
+ *
+ * SECURITY: in production, requires `RATE_LIMIT_PEPPER` to be set to a
+ * non-default value. Throws otherwise — without a real pepper, an attacker
+ * can pre-compute IP-hash rainbow tables.
  */
 export function hashIp(ip: string, pepper?: string): string {
-  const effectivePepper = pepper ?? process.env.RATE_LIMIT_PEPPER ?? 'jobnomad-dev-pepper'
+  const explicit = pepper ?? process.env.RATE_LIMIT_PEPPER
+  const effectivePepper = explicit ?? 'jobnomad-dev-pepper'
+
+  if (process.env.NODE_ENV === 'production') {
+    if (!explicit || DEV_PEPPER_DEFAULTS.has(explicit)) {
+      throw new Error(
+        'RATE_LIMIT_PEPPER must be set to a non-default value in production. ' +
+          'Generate one with: `openssl rand -hex 32` and add it to Vercel env.',
+      )
+    }
+  }
+
   return crypto
     .createHash('sha256')
     .update(`${effectivePepper}:${ip}`)

@@ -198,7 +198,9 @@ test.describe('SMTP health check (opt-in, requires SMTP_HEALTH_TEST=1)', () => {
     // RESEND_API_KEY
     if (resendKey) {
       expect(resendKey).toMatch(/^re_/)
-      console.log(`[smtp-health] RESEND_API_KEY format: OK (prefix: ${resendKey.slice(0, 5)}...)`)
+      // Do not echo any portion of the key (even the public `re_` prefix)
+      // to logs — defense-in-depth against future log retention changes.
+      console.log('[smtp-health] RESEND_API_KEY format: OK')
     } else {
       console.warn('[smtp-health] RESEND_API_KEY is not set -- SMTP will fail in production.')
     }

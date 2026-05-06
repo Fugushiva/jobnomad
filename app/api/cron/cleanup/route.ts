@@ -130,11 +130,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   // 5. Return result
   // -------------------------------------------------------------------------
   if (runStatus === 'failed') {
+    // Do not echo the raw `errorMessage` back to the caller — full diagnostics
+    // are persisted to `cron_runs.error_message` and emitted via the
+    // structured logger above. Keeps response surface minimal.
     return NextResponse.json(
       {
         error: 'Cleanup failed',
         runId,
-        details: errorMessage,
       },
       { status: 500 },
     )

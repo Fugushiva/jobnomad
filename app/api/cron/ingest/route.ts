@@ -119,9 +119,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   // 5. Return result
   // -------------------------------------------------------------------------
   if (runStatus === 'failed') {
+    // Do not echo the raw `errorMessage` back to the caller — even though this
+    // endpoint is bearer-token-gated, the message can carry stack/context
+    // details. The full error is persisted to `cron_runs.error_message` and
+    // emitted via the structured logger above for ops visibility.
     return NextResponse.json(
-      { error: 'Ingestion failed', runId, details: errorMessage },
-      { status: 500 }
+      { error: 'Ingestion failed', runId },
+      { status: 500 },
     )
   }
 

@@ -48,7 +48,16 @@ export const jobCardSchema = z.object({
     label: z.string().optional(),
     reason: z.string(),
   })).optional(),
-  applyUrl: z.string().url().optional(),
+  // Require https:// explicitly — `.url()` alone would accept javascript:,
+  // data:, etc. Job source URLs are always normalized to https:// at
+  // ingestion (see `src/lib/sources/schemas.ts::httpsUrl`), but we duplicate
+  // the check here as defense-in-depth in case a future code path bypasses
+  // ingestion validation.
+  applyUrl: z
+    .string()
+    .url()
+    .refine((u) => u.startsWith('https://'), 'applyUrl must be https://')
+    .optional(),
   isBookmarked: z.boolean().optional(),
 })
 
